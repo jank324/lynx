@@ -1,12 +1,12 @@
 from typing import Optional, Union
 
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from matplotlib.patches import Rectangle
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size, nn
 
 from lynx.utils import UniqueNameGenerator
 
@@ -14,14 +14,10 @@ from .element import Element
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class VerticalCorrector(Element):
@@ -37,32 +33,32 @@ class VerticalCorrector(Element):
 
     def __init__(
         self,
-        length: Union[torch.Tensor, nn.Parameter],
-        angle: Optional[Union[torch.Tensor, nn.Parameter]] = None,
+        length: Union[jax.Array, nn.Parameter],
+        angle: Optional[Union[jax.Array, nn.Parameter]] = None,
         name: Optional[str] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name)
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.asarray(length, **factory_kwargs)
         self.angle = (
-            torch.as_tensor(angle, **factory_kwargs)
+            jnp.asarray(angle, **factory_kwargs)
             if angle is not None
-            else torch.zeros_like(self.length)
+            else jnp.zeros_like(self.length)
         )
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         device = self.length.device
         dtype = self.length.dtype
 
         gamma = energy / rest_energy.to(device=device, dtype=dtype)
         igamma2 = torch.zeros_like(gamma)  # TODO: Effect on gradients?
         igamma2[gamma != 0] = 1 / gamma[gamma != 0] ** 2
-        beta = torch.sqrt(1 - igamma2)
+        beta = jnp.sqrt(1 - igamma2)
 
-        tm = torch.eye(7, device=device, dtype=dtype).repeat((*self.length.shape, 1, 1))
+        tm = jnp.eye(7, device=device, dtype=dtype).repeat((*self.length.shape, 1, 1))
         tm[..., 0, 1] = self.length
         tm[..., 2, 3] = self.length
         tm[..., 3, 6] = self.angle
@@ -82,11 +78,11 @@ class VerticalCorrector(Element):
     def is_active(self) -> bool:
         return any(self.angle != 0)
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         split_elements = []
         remaining = self.length
         while remaining > 0:
-            length = torch.min(resolution, remaining)
+            length = jnp.min(resolution, remaining)
             element = VerticalCorrector(length, self.angle * length / self.length)
             split_elements.append(element)
             remaining -= resolution

@@ -2,25 +2,26 @@
 
 from typing import Optional
 
-import torch
+import jax
+import jax.numpy as jnp
 from scipy import constants
 
-REST_ENERGY = torch.tensor(
+REST_ENERGY = (
     constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
 )  # Electron mass
 
 
-def rotation_matrix(angle: torch.Tensor) -> torch.Tensor:
+def rotation_matrix(angle: jax.Array) -> jax.Array:
     """Rotate the transfer map in x-y plane
 
     :param angle: Rotation angle in rad, for example `angle = np.pi/2` for vertical =
         dipole.
     :return: Rotation matrix to be multiplied to the element's transfer matrix.
     """
-    cs = torch.cos(angle)
-    sn = torch.sin(angle)
+    cs = jnp.cos(angle)
+    sn = jnp.sin(angle)
 
-    tm = torch.eye(7, dtype=angle.dtype, device=angle.device).repeat(*angle.shape, 1, 1)
+    tm = jnp.eye(7, dtype=angle.dtype, device=angle.device).repeat(*angle.shape, 1, 1)
     tm[..., 0, 0] = cs
     tm[..., 0, 2] = sn
     tm[..., 1, 1] = cs
@@ -34,12 +35,12 @@ def rotation_matrix(angle: torch.Tensor) -> torch.Tensor:
 
 
 def base_rmatrix(
-    length: torch.Tensor,
-    k1: torch.Tensor,
-    hx: torch.Tensor,
-    tilt: Optional[torch.Tensor] = None,
-    energy: Optional[torch.Tensor] = None,
-) -> torch.Tensor:
+    length: jax.Array,
+    k1: jax.Array,
+    hx: jax.Array,
+    tilt: Optional[jax.Array] = None,
+    energy: Optional[jax.Array] = None,
+) -> jax.Array:
     """
     Create a universal transfer matrix for a beamline element.
 
@@ -53,14 +54,14 @@ def base_rmatrix(
     device = length.device
     dtype = length.dtype
 
-    tilt = tilt if tilt is not None else torch.zeros_like(length)
-    energy = energy if energy is not None else torch.zeros_like(length)
+    tilt = tilt if tilt is not None else jnp.zeros_like(length)
+    energy = energy if energy is not None else jnp.zeros_like(length)
 
     gamma = energy / REST_ENERGY.to(device=device, dtype=dtype)
-    igamma2 = torch.ones_like(length)
+    igamma2 = jnp.ones_like(length)
     igamma2[gamma != 0] = 1 / gamma[gamma != 0] ** 2
 
-    beta = torch.sqrt(1 - igamma2)
+    beta = jnp.sqrt(1 - igamma2)
 
     # Avoid division by zero
     k1 = k1.clone()
@@ -68,20 +69,20 @@ def base_rmatrix(
 
     kx2 = k1 + hx**2
     ky2 = -k1
-    kx = torch.sqrt(torch.complex(kx2, torch.tensor(0.0, device=device, dtype=dtype)))
-    ky = torch.sqrt(torch.complex(ky2, torch.tensor(0.0, device=device, dtype=dtype)))
-    cx = torch.cos(kx * length).real
-    cy = torch.cos(ky * length).real
-    sy = torch.clone(length)
-    sy[ky != 0] = (torch.sin(ky[ky != 0] * length[ky != 0]) / ky[ky != 0]).real
+    kx = jnp.sqrt(jnp.complex(kx2, torch.tensor(0.0, device=device, dtype=dtype)))
+    ky = jnp.sqrt(jnp.complex(ky2, torch.tensor(0.0, device=device, dtype=dtype)))
+    cx = jnp.cos(kx * length).real
+    cy = jnp.cos(ky * length).real
+    sy = jnp.clone(length)
+    sy[ky != 0] = (jnp.sin(ky[ky != 0] * length[ky != 0]) / ky[ky != 0]).real
 
-    sx = (torch.sin(kx * length) / kx).real
+    sx = (jnp.sin(kx * length) / kx).real
     dx = hx / kx2 * (1.0 - cx)
     r56 = hx**2 * (length - sx) / kx2 / beta**2
 
     r56 = r56 - length / beta**2 * igamma2
 
-    R = torch.eye(7, dtype=dtype, device=device).repeat(*length.shape, 1, 1)
+    R = jnp.eye(7, dtype=dtype, device=device).repeat(*length.shape, 1, 1)
     R[..., 0, 0] = cx
     R[..., 0, 1] = sx
     R[..., 0, 5] = dx / beta
@@ -97,26 +98,24 @@ def base_rmatrix(
     R[..., 4, 5] = r56
 
     # Rotate the R matrix for skew / vertical magnets
-    if torch.any(tilt != 0):
-        R = torch.einsum(
+    if jnp.any(tilt != 0):
+        R = jnp.einsum(
             "...ij,...jk,...kl->...il", rotation_matrix(-tilt), R, rotation_matrix(tilt)
         )
     return R
 
 
-def misalignment_matrix(
-    misalignment: torch.Tensor,
-) -> tuple[torch.Tensor, torch.Tensor]:
+def misalignment_matrix(misalignment: jax.Array) -> tuple[jax.Array, jax.Array]:
     """Shift the beam for tracking beam through misaligned elements"""
     device = misalignment.device
     dtype = misalignment.dtype
     batch_shape = misalignment.shape[:-1]
 
-    R_exit = torch.eye(7, device=device, dtype=dtype).repeat(*batch_shape, 1, 1)
+    R_exit = jnp.eye(7, device=device, dtype=dtype).repeat(*batch_shape, 1, 1)
     R_exit[..., 0, 6] = misalignment[..., 0]
     R_exit[..., 2, 6] = misalignment[..., 1]
 
-    R_entry = torch.eye(7, device=device, dtype=dtype).repeat(*batch_shape, 1, 1)
+    R_entry = jnp.eye(7, device=device, dtype=dtype).repeat(*batch_shape, 1, 1)
     R_entry[..., 0, 6] = -misalignment[..., 0]
     R_entry[..., 2, 6] = -misalignment[..., 1]
 

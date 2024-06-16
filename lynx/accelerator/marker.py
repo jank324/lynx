@@ -1,10 +1,10 @@
 from typing import Optional
 
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size
 
 from lynx.particles import Beam
 from lynx.utils import UniqueNameGenerator
@@ -13,14 +13,10 @@ from .element import Element
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Marker(Element):
@@ -33,8 +29,8 @@ class Marker(Element):
     def __init__(self, name: Optional[str] = None) -> None:
         super().__init__(name=name)
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
-        return torch.eye(7, device=energy.device, dtype=energy.dtype).repeat(
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
+        return jnp.eye(7, device=energy.device, dtype=energy.dtype).repeat(
             (*energy.shape, 1, 1)
         )
 
@@ -52,7 +48,7 @@ class Marker(Element):
     def is_skippable(self) -> bool:
         return True
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         return [self]
 
     def plot(self, ax: plt.Axes, s: float) -> None:

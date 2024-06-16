@@ -1,12 +1,12 @@
 from typing import Optional, Union
 
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from matplotlib.patches import Rectangle
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size, nn
 
 from lynx.track_methods import base_rmatrix, rotation_matrix
 from lynx.utils import UniqueNameGenerator
@@ -15,14 +15,10 @@ from .element import Element
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Dipole(Element):
@@ -43,63 +39,63 @@ class Dipole(Element):
 
     def __init__(
         self,
-        length: Union[torch.Tensor, nn.Parameter],
-        angle: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        e1: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        e2: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        tilt: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        fringe_integral: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        fringe_integral_exit: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        gap: Optional[Union[torch.Tensor, nn.Parameter]] = None,
+        length: Union[jax.Array, nn.Parameter],
+        angle: Optional[Union[jax.Array, nn.Parameter]] = None,
+        e1: Optional[Union[jax.Array, nn.Parameter]] = None,
+        e2: Optional[Union[jax.Array, nn.Parameter]] = None,
+        tilt: Optional[Union[jax.Array, nn.Parameter]] = None,
+        fringe_integral: Optional[Union[jax.Array, nn.Parameter]] = None,
+        fringe_integral_exit: Optional[Union[jax.Array, nn.Parameter]] = None,
+        gap: Optional[Union[jax.Array, nn.Parameter]] = None,
         name: Optional[str] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name)
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.asarray(length, **factory_kwargs)
         self.angle = (
-            torch.as_tensor(angle, **factory_kwargs)
+            jnp.asarray(angle, **factory_kwargs)
             if angle is not None
-            else torch.zeros_like(self.length)
+            else jnp.zeros_like(self.length)
         )
         self.gap = (
-            torch.as_tensor(gap, **factory_kwargs)
+            jnp.asarray(gap, **factory_kwargs)
             if gap is not None
-            else torch.zeros_like(self.length)
+            else jnp.zeros_like(self.length)
         )
         self.tilt = (
-            torch.as_tensor(tilt, **factory_kwargs)
+            jnp.asarray(tilt, **factory_kwargs)
             if tilt is not None
-            else torch.zeros_like(self.length)
+            else jnp.zeros_like(self.length)
         )
         self.name = name
         self.fringe_integral = (
-            torch.as_tensor(fringe_integral, **factory_kwargs)
+            jnp.asarray(fringe_integral, **factory_kwargs)
             if fringe_integral is not None
-            else torch.zeros_like(self.length)
+            else jnp.zeros_like(self.length)
         )
         self.fringe_integral_exit = (
             self.fringe_integral
             if fringe_integral_exit is None
-            else torch.as_tensor(fringe_integral_exit, **factory_kwargs)
+            else jnp.asarray(fringe_integral_exit, **factory_kwargs)
         )
         # Sector bend if not specified
         self.e1 = (
-            torch.as_tensor(e1, **factory_kwargs)
+            jnp.asarray(e1, **factory_kwargs)
             if e1 is not None
-            else torch.zeros_like(self.length)
+            else jnp.zeros_like(self.length)
         )
         self.e2 = (
-            torch.as_tensor(e2, **factory_kwargs)
+            jnp.asarray(e2, **factory_kwargs)
             if e2 is not None
-            else torch.zeros_like(self.length)
+            else jnp.zeros_like(self.length)
         )
 
     @property
-    def hx(self) -> torch.Tensor:
-        value = torch.zeros_like(self.length)
+    def hx(self) -> jax.Array:
+        value = jnp.zeros_like(self.length)
         value[self.length != 0] = (
             self.angle[self.length != 0] / self.length[self.length != 0]
         )
@@ -113,7 +109,7 @@ class Dipole(Element):
     def is_active(self):
         return any(self.angle != 0)
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         device = self.length.device
         dtype = self.length.dtype
 
@@ -123,13 +119,13 @@ class Dipole(Element):
         if any(self.length != 0.0):  # Bending magnet with finite length
             R = base_rmatrix(
                 length=self.length,
-                k1=torch.zeros_like(self.length),
+                k1=jnp.zeros_like(self.length),
                 hx=self.hx,
-                tilt=torch.zeros_like(self.length),
+                tilt=jnp.zeros_like(self.length),
                 energy=energy,
             )  # Tilt is applied after adding edges
         else:  # Reduce to Thin-Corrector
-            R = torch.eye(7, device=device, dtype=dtype).repeat(
+            R = jnp.eye(7, device=device, dtype=dtype).repeat(
                 (*self.length.shape, 1, 1)
             )
             R[..., 0, 1] = self.length
@@ -137,50 +133,50 @@ class Dipole(Element):
             R[..., 2, 3] = self.length
 
         # Apply fringe fields
-        R = torch.matmul(R_exit, torch.matmul(R, R_enter))
+        R = jnp.matmul(R_exit, jnp.matmul(R, R_enter))
         # Apply rotation for tilted magnets
-        R = torch.matmul(
-            rotation_matrix(-self.tilt), torch.matmul(R, rotation_matrix(self.tilt))
+        R = jnp.matmul(
+            rotation_matrix(-self.tilt), jnp.matmul(R, rotation_matrix(self.tilt))
         )
         return R
 
-    def _transfer_map_enter(self) -> torch.Tensor:
+    def _transfer_map_enter(self) -> jax.Array:
         """Linear transfer map for the entrance face of the dipole magnet."""
         device = self.length.device
         dtype = self.length.dtype
 
-        sec_e = 1.0 / torch.cos(self.e1)
+        sec_e = 1.0 / jnp.cos(self.e1)
         phi = (
             self.fringe_integral
             * self.hx
             * self.gap
             * sec_e
-            * (1 + torch.sin(self.e1) ** 2)
+            * (1 + jnp.sin(self.e1) ** 2)
         )
 
-        tm = torch.eye(7, device=device, dtype=dtype).repeat(*phi.shape, 1, 1)
-        tm[..., 1, 0] = self.hx * torch.tan(self.e1)
-        tm[..., 3, 2] = -self.hx * torch.tan(self.e1 - phi)
+        tm = jnp.eye(7, device=device, dtype=dtype).repeat(*phi.shape, 1, 1)
+        tm[..., 1, 0] = self.hx * jnp.tan(self.e1)
+        tm[..., 3, 2] = -self.hx * jnp.tan(self.e1 - phi)
 
         return tm
 
-    def _transfer_map_exit(self) -> torch.Tensor:
+    def _transfer_map_exit(self) -> jax.Array:
         """Linear transfer map for the exit face of the dipole magnet."""
         device = self.length.device
         dtype = self.length.dtype
 
-        sec_e = 1.0 / torch.cos(self.e2)
+        sec_e = 1.0 / jnp.cos(self.e2)
         phi = (
             self.fringe_integral_exit
             * self.hx
             * self.gap
             * sec_e
-            * (1 + torch.sin(self.e2) ** 2)
+            * (1 + jnp.sin(self.e2) ** 2)
         )
 
-        tm = torch.eye(7, device=device, dtype=dtype).repeat(*phi.shape, 1, 1)
-        tm[..., 1, 0] = self.hx * torch.tan(self.e2)
-        tm[..., 3, 2] = -self.hx * torch.tan(self.e2 - phi)
+        tm = jnp.eye(7, device=device, dtype=dtype).repeat(*phi.shape, 1, 1)
+        tm[..., 1, 0] = self.hx * jnp.tan(self.e2)
+        tm[..., 3, 2] = -self.hx * jnp.tan(self.e2 - phi)
 
         return tm
 
@@ -197,7 +193,7 @@ class Dipole(Element):
             name=self.name,
         )
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         # TODO: Implement splitting for dipole properly, for now just returns the
         # element itself
         return [self]

@@ -1,9 +1,9 @@
 from typing import Optional, Union
 
-import torch
+import jax
+import jax.numpy as jnp
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import nn
 
 from lynx.utils import UniqueNameGenerator
 
@@ -11,14 +11,10 @@ from .dipole import Dipole
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class RBend(Dipole):
@@ -39,17 +35,17 @@ class RBend(Dipole):
 
     def __init__(
         self,
-        length: Optional[Union[torch.Tensor, nn.Parameter]],
-        angle: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        e1: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        e2: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        tilt: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        fringe_integral: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        fringe_integral_exit: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        gap: Optional[Union[torch.Tensor, nn.Parameter]] = None,
+        length: Optional[Union[jax.Array, nn.Parameter]],
+        angle: Optional[Union[jax.Array, nn.Parameter]] = None,
+        e1: Optional[Union[jax.Array, nn.Parameter]] = None,
+        e2: Optional[Union[jax.Array, nn.Parameter]] = None,
+        tilt: Optional[Union[jax.Array, nn.Parameter]] = None,
+        fringe_integral: Optional[Union[jax.Array, nn.Parameter]] = None,
+        fringe_integral_exit: Optional[Union[jax.Array, nn.Parameter]] = None,
+        gap: Optional[Union[jax.Array, nn.Parameter]] = None,
         name: Optional[str] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ):
         super().__init__(
             length=length,

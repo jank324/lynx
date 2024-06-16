@@ -1,8 +1,6 @@
 import json
 from typing import Any, Optional, Tuple
 
-import torch
-
 import lynx
 
 

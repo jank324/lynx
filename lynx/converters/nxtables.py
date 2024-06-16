@@ -2,7 +2,8 @@ import csv
 from pathlib import Path
 from typing import Dict, Optional
 
-import torch
+import jax
+import jax.numpy as jnp
 
 import lynx
 
@@ -53,59 +54,59 @@ def translate_element(row: list[str], header: list[str]) -> Optional[Dict]:
     elif class_name == "MCXG":  # TODO: Check length with Willi
         assert name[6] == "X"
         horizontal_coil = lynx.HorizontalCorrector(
-            name=name[:6] + "H" + name[6 + 1 :], length=torch.tensor([5e-05])
+            name=name[:6] + "H" + name[6 + 1 :], length=jnp.array([5e-05])
         )
         vertical_coil = lynx.VerticalCorrector(
-            name=name[:6] + "V" + name[6 + 1 :], length=torch.tensor([5e-05])
+            name=name[:6] + "V" + name[6 + 1 :], length=jnp.array([5e-05])
         )
         element = lynx.Segment(elements=[horizontal_coil, vertical_coil], name=name)
     elif class_name == "BSCX":
         element = lynx.Screen(
             name=name,
-            resolution=torch.tensor((2464, 2056)),
-            pixel_size=torch.tensor((0.00343e-3, 0.00247e-3)),
+            resolution=jnp.array([2464, 2056]),
+            pixel_size=jnp.array([0.00343e-3, 0.00247e-3]),
             binning=torch.tensor(1),
         )
     elif class_name == "BSCR":
         element = lynx.Screen(
             name=name,
-            resolution=torch.tensor([2448, 2040]),
-            pixel_size=torch.tensor([3.5488e-6, 2.5003e-6]),
+            resolution=jnp.array([2448, 2040]),
+            pixel_size=jnp.array([3.5488e-6, 2.5003e-6]),
             binning=torch.tensor(1),
         )
     elif class_name == "BSCM":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
-            resolution=torch.tensor([2448, 2040]),
-            pixel_size=torch.tensor([3.5488e-6, 2.5003e-6]),
+            resolution=jnp.array([2448, 2040]),
+            pixel_size=jnp.array([3.5488e-6, 2.5003e-6]),
             binning=torch.tensor(1),
         )
     elif class_name == "BSCO":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
-            resolution=torch.tensor([2448, 2040]),
-            pixel_size=torch.tensor([3.5488e-6, 2.5003e-6]),
+            resolution=jnp.array([2448, 2040]),
+            pixel_size=jnp.array([3.5488e-6, 2.5003e-6]),
             binning=torch.tensor(1),
         )
     elif class_name == "BSCA":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
-            resolution=torch.tensor([2448, 2040]),
-            pixel_size=torch.tensor([3.5488e-6, 2.5003e-6]),
+            resolution=jnp.array([2448, 2040]),
+            pixel_size=jnp.array([3.5488e-6, 2.5003e-6]),
             binning=torch.tensor(1),
         )
     elif class_name == "BSCE":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
-            resolution=torch.tensor((2464, 2056)),
-            pixel_size=torch.tensor((0.00998e-3, 0.00715e-3)),
+            resolution=jnp.array([2464, 2056]),
+            pixel_size=jnp.array([0.00998e-3, 0.00715e-3]),
             binning=torch.tensor(1),
         )
     elif class_name == "SCRD":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
-            resolution=torch.tensor((2464, 2056)),
-            pixel_size=torch.tensor((0.00998e-3, 0.00715e-3)),
+            resolution=jnp.array([2464, 2056]),
+            pixel_size=jnp.array([0.00998e-3, 0.00715e-3]),
             binning=torch.tensor(1),
         )
     elif class_name == "BPMG":
@@ -134,38 +135,38 @@ def translate_element(row: list[str], header: list[str]) -> Optional[Dict]:
             shape="rectangular",
         )
     elif class_name == "MCHM":
-        element = lynx.HorizontalCorrector(name=name, length=torch.tensor([0.02]))
+        element = lynx.HorizontalCorrector(name=name, length=jnp.array([0.02]))
     elif class_name == "MCVM":
-        element = lynx.VerticalCorrector(name=name, length=torch.tensor([0.02]))
+        element = lynx.VerticalCorrector(name=name, length=jnp.array([0.02]))
     elif class_name == "MBHL":
-        element = lynx.Dipole(name=name, length=torch.tensor([0.322]))
+        element = lynx.Dipole(name=name, length=jnp.array([0.322]))
     elif class_name == "MBHB":
-        element = lynx.Dipole(name=name, length=torch.tensor([0.22]))
+        element = lynx.Dipole(name=name, length=jnp.array([0.22]))
     elif class_name == "MBHO":
         element = lynx.Dipole(
             name=name,
-            length=torch.tensor([0.43852543421396856]),
-            angle=torch.tensor([0.8203047484373349]),
-            e2=torch.tensor([-0.7504915783575616]),
+            length=jnp.array([0.43852543421396856]),
+            angle=jnp.array([0.8203047484373349]),
+            e2=jnp.array([-0.7504915783575616]),
         )
     elif class_name == "MQZM":
-        element = lynx.Quadrupole(name=name, length=torch.tensor([0.122]))
+        element = lynx.Quadrupole(name=name, length=jnp.array([0.122]))
     elif class_name == "RSBL":
         element = lynx.Cavity(
             name=name,
-            length=torch.tensor([4.139]),
-            frequency=torch.tensor([2.998e9]),
-            voltage=torch.tensor([76e6]),
+            length=jnp.array([4.139]),
+            frequency=jnp.array([2.998e9]),
+            voltage=jnp.array([76e6]),
         )
     elif class_name == "RXBD":
         element = lynx.Cavity(  # TODO: TD? and tilt?
             name=name,
-            length=torch.tensor([1.0]),
-            frequency=torch.tensor([11.9952e9]),
-            voltage=torch.tensor([0.0]),
+            length=jnp.array([1.0]),
+            frequency=jnp.array([11.9952e9]),
+            voltage=jnp.array([0.0]),
         )
     elif class_name == "UNDA":  # TODO: Figure out actual length
-        element = lynx.Undulator(name=name, length=torch.tensor([0.25]))
+        element = lynx.Undulator(name=name, length=jnp.array([0.25]))
     elif class_name in [
         "SOLG",
         "BCMG",
@@ -252,7 +253,7 @@ def read_nx_tables(filepath: Path) -> "lynx.Element":
             filled_with_drifts.append(
                 lynx.Drift(
                     name=f"DRIFT_{previous['element'].name}_{current['element'].name}",
-                    length=torch.as_tensor([drift_length]),
+                    length=jnp.array([drift_length]),
                 )
             )
 

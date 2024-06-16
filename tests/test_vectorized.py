@@ -1,4 +1,4 @@
-import torch
+import jax.numpy as jnp
 
 import lynx
 
@@ -9,11 +9,9 @@ def test_segment_length_shape():
     """Test that the shape of a segment's length matches the input."""
     segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([0.6, 0.5])),
-            lynx.Quadrupole(
-                length=torch.tensor([0.2, 0.25]), k1=torch.tensor([4.2, 4.2])
-            ),
-            lynx.Drift(length=torch.tensor([0.4, 0.3])),
+            lynx.Drift(length=jnp.array([0.6, 0.5])),
+            lynx.Quadrupole(length=jnp.array([0.2, 0.25]), k1=jnp.array([4.2, 4.2])),
+            lynx.Drift(length=jnp.array([0.4, 0.3])),
         ]
     )
 
@@ -27,12 +25,12 @@ def test_segment_length_shape_2d():
     """
     segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([[0.6, 0.5], [0.4, 0.3], [0.4, 0.3]])),
+            lynx.Drift(length=jnp.array([[0.6, 0.5], [0.4, 0.3], [0.4, 0.3]])),
             lynx.Quadrupole(
-                length=torch.tensor([[0.2, 0.25], [0.3, 0.35], [0.3, 0.35]]),
-                k1=torch.tensor([[4.2, 4.2], [4.3, 4.3], [4.3, 4.3]]),
+                length=jnp.array([[0.2, 0.25], [0.3, 0.35], [0.3, 0.35]]),
+                k1=jnp.array([[4.2, 4.2], [4.3, 4.3], [4.3, 4.3]]),
             ),
-            lynx.Drift(length=torch.tensor([[0.4, 0.3], [0.2, 0.1], [0.2, 0.1]])),
+            lynx.Drift(length=jnp.array([[0.4, 0.3], [0.2, 0.1], [0.2, 0.1]])),
         ]
     )
 
@@ -44,10 +42,10 @@ def test_track_particle_single_element_shape():
     Test that the shape of a beam tracked through a single element matches the input.
     """
     quadrupole = lynx.Quadrupole(
-        length=torch.tensor([0.2, 0.25]), k1=torch.tensor([4.2, 4.2])
+        length=jnp.array([0.2, 0.25]), k1=jnp.array([4.2, 4.2])
     )
     incoming = lynx.ParticleBeam.from_parameters(
-        num_particles=100_000, sigma_x=torch.tensor([1e-5, 2e-5])
+        num_particles=100_000, sigma_x=jnp.array([1e-5, 2e-5])
     )
 
     outgoing = quadrupole.track(incoming)
@@ -76,12 +74,12 @@ def test_track_particle_single_element_shape_2d():
     an n-dimensional batch.
     """
     quadrupole = lynx.Quadrupole(
-        length=torch.tensor([[0.2, 0.25], [0.3, 0.35], [0.4, 0.45]]),
-        k1=torch.tensor([[4.2, 4.2], [4.3, 4.3], [4.4, 4.4]]),
+        length=jnp.array([[0.2, 0.25], [0.3, 0.35], [0.4, 0.45]]),
+        k1=jnp.array([[4.2, 4.2], [4.3, 4.3], [4.4, 4.4]]),
     )
     incoming = lynx.ParticleBeam.from_parameters(
         num_particles=100_000,
-        sigma_x=torch.tensor([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]]),
+        sigma_x=jnp.array([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]]),
     )
 
     outgoing = quadrupole.track(incoming)
@@ -110,15 +108,13 @@ def test_track_particle_segment_shape():
     """
     segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([0.6, 0.5])),
-            lynx.Quadrupole(
-                length=torch.tensor([0.2, 0.25]), k1=torch.tensor([4.2, 4.2])
-            ),
-            lynx.Drift(length=torch.tensor([0.4, 0.3])),
+            lynx.Drift(length=jnp.array([0.6, 0.5])),
+            lynx.Quadrupole(length=jnp.array([0.2, 0.25]), k1=jnp.array([4.2, 4.2])),
+            lynx.Drift(length=jnp.array([0.4, 0.3])),
         ]
     )
     incoming = lynx.ParticleBeam.from_parameters(
-        num_particles=100_000, sigma_x=torch.tensor([1e-5, 2e-5])
+        num_particles=100_000, sigma_x=jnp.array([1e-5, 2e-5])
     )
 
     outgoing = segment.track(incoming)
@@ -148,17 +144,17 @@ def test_track_particle_segment_shape_2d():
     """
     segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([[0.6, 0.5], [0.4, 0.3], [0.2, 0.1]])),
+            lynx.Drift(length=jnp.array([[0.6, 0.5], [0.4, 0.3], [0.2, 0.1]])),
             lynx.Quadrupole(
-                length=torch.tensor([[0.2, 0.25], [0.3, 0.35], [0.4, 0.45]]),
-                k1=torch.tensor([[4.2, 4.2], [4.3, 4.3], [4.4, 4.4]]),
+                length=jnp.array([[0.2, 0.25], [0.3, 0.35], [0.4, 0.45]]),
+                k1=jnp.array([[4.2, 4.2], [4.3, 4.3], [4.4, 4.4]]),
             ),
-            lynx.Drift(length=torch.tensor([[0.4, 0.3], [0.6, 0.5], [0.8, 0.7]])),
+            lynx.Drift(length=jnp.array([[0.4, 0.3], [0.6, 0.5], [0.8, 0.7]])),
         ]
     )
     incoming = lynx.ParticleBeam.from_parameters(
         num_particles=100_000,
-        sigma_x=torch.tensor([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]]),
+        sigma_x=jnp.array([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]]),
     )
 
     outgoing = segment.track(incoming)
@@ -186,9 +182,9 @@ def test_track_parameter_single_element_shape():
     Test that the shape of a beam tracked through a single element matches the input.
     """
     quadrupole = lynx.Quadrupole(
-        length=torch.tensor([0.2, 0.25]), k1=torch.tensor([4.2, 4.2])
+        length=jnp.array([0.2, 0.25]), k1=jnp.array([4.2, 4.2])
     )
-    incoming = lynx.ParameterBeam.from_parameters(sigma_x=torch.tensor([1e-5, 2e-5]))
+    incoming = lynx.ParameterBeam.from_parameters(sigma_x=jnp.array([1e-5, 2e-5]))
 
     outgoing = quadrupole.track(incoming)
 
@@ -212,11 +208,11 @@ def test_track_parameter_single_element_shape_2d():
     an n-dimensional batch.
     """
     quadrupole = lynx.Quadrupole(
-        length=torch.tensor([[0.2, 0.25], [0.3, 0.35], [0.4, 0.45]]),
-        k1=torch.tensor([[4.2, 4.2], [4.3, 4.3], [4.4, 4.4]]),
+        length=jnp.array([[0.2, 0.25], [0.3, 0.35], [0.4, 0.45]]),
+        k1=jnp.array([[4.2, 4.2], [4.3, 4.3], [4.4, 4.4]]),
     )
     incoming = lynx.ParameterBeam.from_parameters(
-        sigma_x=torch.tensor([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]])
+        sigma_x=jnp.array([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]])
     )
 
     outgoing = quadrupole.track(incoming)
@@ -241,14 +237,12 @@ def test_track_parameter_segment_shape():
     """
     segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([0.6, 0.5])),
-            lynx.Quadrupole(
-                length=torch.tensor([0.2, 0.25]), k1=torch.tensor([4.2, 4.2])
-            ),
-            lynx.Drift(length=torch.tensor([0.4, 0.3])),
+            lynx.Drift(length=jnp.array([0.6, 0.5])),
+            lynx.Quadrupole(length=jnp.array([0.2, 0.25]), k1=jnp.array([4.2, 4.2])),
+            lynx.Drift(length=jnp.array([0.4, 0.3])),
         ]
     )
-    incoming = lynx.ParameterBeam.from_parameters(sigma_x=torch.tensor([1e-5, 2e-5]))
+    incoming = lynx.ParameterBeam.from_parameters(sigma_x=jnp.array([1e-5, 2e-5]))
 
     outgoing = segment.track(incoming)
 
@@ -273,16 +267,16 @@ def test_track_parameter_segment_shape_2d():
     """
     segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([[0.6, 0.5], [0.4, 0.3], [0.2, 0.1]])),
+            lynx.Drift(length=jnp.array([[0.6, 0.5], [0.4, 0.3], [0.2, 0.1]])),
             lynx.Quadrupole(
-                length=torch.tensor([[0.2, 0.25], [0.3, 0.35], [0.4, 0.45]]),
-                k1=torch.tensor([[4.2, 4.2], [4.3, 4.3], [4.4, 4.4]]),
+                length=jnp.array([[0.2, 0.25], [0.3, 0.35], [0.4, 0.45]]),
+                k1=jnp.array([[4.2, 4.2], [4.3, 4.3], [4.4, 4.4]]),
             ),
-            lynx.Drift(length=torch.tensor([[0.4, 0.3], [0.6, 0.5], [0.8, 0.7]])),
+            lynx.Drift(length=jnp.array([[0.4, 0.3], [0.6, 0.5], [0.8, 0.7]])),
         ]
     )
     incoming = lynx.ParameterBeam.from_parameters(
-        sigma_x=torch.tensor([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]])
+        sigma_x=jnp.array([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]])
     )
 
     outgoing = segment.track(incoming)
@@ -309,7 +303,7 @@ def test_enormous_through_ares():
     segment_broadcast = segment.broadcast((3, 100_000))
     incoming_broadcast = incoming.broadcast((3, 100_000))
 
-    segment_broadcast.AREAMQZM1.k1 = torch.linspace(-30.0, 30.0, 100_000).repeat(3, 1)
+    segment_broadcast.AREAMQZM1.k1 = jnp.linspace(-30.0, 30.0, 100_000).repeat(3, 1)
 
     outgoing = segment_broadcast.track(incoming_broadcast)
 
@@ -333,10 +327,10 @@ def test_before_after_broadcast_tracking_equal_cavity():
     the same as in the segment before broadcasting. A cavity is used as a reference.
     """
     cavity = lynx.Cavity(
-        length=torch.tensor([3.0441]),
-        voltage=torch.tensor([48198468.0]),
-        phase=torch.tensor([-0.0]),
-        frequency=torch.tensor([2.8560e09]),
+        length=jnp.array([3.0441]),
+        voltage=jnp.array([48198468.0]),
+        phase=jnp.array([-0.0]),
+        frequency=jnp.array([2.8560e09]),
         name="k26_2d",
     )
     incoming = lynx.ParameterBeam.from_astra("tests/resources/ACHIP_EA1_2021.1351.001")
@@ -348,8 +342,8 @@ def test_before_after_broadcast_tracking_equal_cavity():
 
     for i in range(3):
         for j in range(10):
-            assert torch.all(broadcast_outgoing._mu[i, j] == outgoing._mu[0])
-            assert torch.all(broadcast_outgoing._cov[i, j] == outgoing._cov[0])
+            assert jnp.all(broadcast_outgoing._mu[i, j] == outgoing._mu[0])
+            assert jnp.all(broadcast_outgoing._cov[i, j] == outgoing._cov[0])
 
 
 def test_before_after_broadcast_tracking_equal_ares_ea():
@@ -359,7 +353,7 @@ def test_before_after_broadcast_tracking_equal_ares_ea():
     """
     segment = lynx.Segment.from_ocelot(ares.cell).subcell("AREASOLA1", "AREABSCR1")
     incoming = lynx.ParameterBeam.from_astra("tests/resources/ACHIP_EA1_2021.1351.001")
-    segment.AREAMQZM1.k1 = torch.tensor([4.2])
+    segment.AREAMQZM1.k1 = jnp.array([4.2])
     outgoing = segment.track(incoming)
 
     broadcast_segment = segment.broadcast((3, 10))
@@ -368,13 +362,13 @@ def test_before_after_broadcast_tracking_equal_ares_ea():
 
     for i in range(3):
         for j in range(10):
-            assert torch.allclose(broadcast_outgoing._mu[i, j], outgoing._mu[0])
-            assert torch.allclose(broadcast_outgoing._cov[i, j], outgoing._cov[0])
+            assert jnp.allclose(broadcast_outgoing._mu[i, j], outgoing._mu[0])
+            assert jnp.allclose(broadcast_outgoing._cov[i, j], outgoing._cov[0])
 
 
 def test_broadcast_customtransfermap():
     """Test that broadcasting a `CustomTransferMap` element gives the correct result."""
-    tm = torch.tensor(
+    tm = jnp.array(
         [
             [
                 [1.0, 4.0e-02, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -388,19 +382,19 @@ def test_broadcast_customtransfermap():
         ]
     )
 
-    element = lynx.CustomTransferMap(length=torch.tensor([0.4]), transfer_map=tm)
+    element = lynx.CustomTransferMap(length=jnp.array([0.4]), transfer_map=tm)
     broadcast_element = element.broadcast((3, 10))
 
     assert broadcast_element.length.shape == (3, 10)
     assert broadcast_element._transfer_map.shape == (3, 10, 7, 7)
     for i in range(3):
         for j in range(10):
-            assert torch.all(broadcast_element._transfer_map[i, j] == tm[0])
+            assert jnp.all(broadcast_element._transfer_map[i, j] == tm[0])
 
 
 def test_broadcast_drift():
     """Test that broadcasting a `Drift` element gives the correct result."""
-    element = lynx.Drift(length=torch.tensor([0.4]))
+    element = lynx.Drift(length=jnp.array([0.4]))
     broadcast_element = element.broadcast((3, 10))
 
     assert broadcast_element.length.shape == (3, 10)
@@ -415,7 +409,7 @@ def test_broadcast_quadrupole():
     # TODO Add misalignment to the test
     # TODO Add tilt to the test
 
-    element = lynx.Quadrupole(length=torch.tensor([0.4]), k1=torch.tensor([4.2]))
+    element = lynx.Quadrupole(length=jnp.array([0.4]), k1=jnp.array([4.2]))
     broadcast_element = element.broadcast((3, 10))
 
     assert broadcast_element.length.shape == (3, 10)
@@ -432,14 +426,14 @@ def test_cavity_with_zero_and_non_zero_voltage():
     there are no errors. This test does NOT check physical correctness.
     """
     cavity = lynx.Cavity(
-        length=torch.tensor([3.0441, 3.0441, 3.0441]),
-        voltage=torch.tensor([0.0, 48198468.0, 0.0]),
-        phase=torch.tensor([48198468.0, 48198468.0, 48198468.0]),
-        frequency=torch.tensor([2.8560e09, 2.8560e09, 2.8560e09]),
+        length=jnp.array([3.0441, 3.0441, 3.0441]),
+        voltage=jnp.array([0.0, 48198468.0, 0.0]),
+        phase=jnp.array([48198468.0, 48198468.0, 48198468.0]),
+        frequency=jnp.array([2.8560e09, 2.8560e09, 2.8560e09]),
         name="my_test_cavity",
     )
     beam = lynx.ParticleBeam.from_parameters(
-        num_particles=100_000, sigma_x=torch.tensor([1e-5])
+        num_particles=100_000, sigma_x=jnp.array([1e-5])
     ).broadcast((3,))
 
     _ = cavity.track(beam)
@@ -449,7 +443,7 @@ def test_screen_length_shape():
     """
     Test that the shape of a screen's length matches the shape of its misalignment.
     """
-    screen = lynx.Screen(misalignment=torch.tensor([[0.1, 0.2], [0.3, 0.4]]))
+    screen = lynx.Screen(misalignment=jnp.array([[0.1, 0.2], [0.3, 0.4]]))
     assert screen.length.shape == screen.misalignment.shape[:-1]
 
 
@@ -458,6 +452,6 @@ def test_screen_length_broadcast_shape():
     Test that the shape of a screen's length matches the shape of its misalignment
     after broadcasting.
     """
-    screen = lynx.Screen(misalignment=torch.tensor([[0.1, 0.2]]))
+    screen = lynx.Screen(misalignment=jnp.array([[0.1, 0.2]]))
     broadcast_screen = screen.broadcast((3, 10))
     assert broadcast_screen.length.shape == broadcast_screen.misalignment.shape[:-1]

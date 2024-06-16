@@ -1,11 +1,11 @@
 from typing import Optional, Union
 
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from matplotlib.patches import Rectangle
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size, nn
 
 from lynx.particles import Beam, ParameterBeam, ParticleBeam
 from lynx.utils import UniqueNameGenerator
@@ -14,14 +14,10 @@ from .element import Element
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Cavity(Element):
@@ -37,32 +33,32 @@ class Cavity(Element):
 
     def __init__(
         self,
-        length: Union[torch.Tensor, nn.Parameter],
-        voltage: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        phase: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        frequency: Optional[Union[torch.Tensor, nn.Parameter]] = None,
+        length: Union[jax.Array, nn.Parameter],
+        voltage: Optional[Union[jax.Array, nn.Parameter]] = None,
+        phase: Optional[Union[jax.Array, nn.Parameter]] = None,
+        frequency: Optional[Union[jax.Array, nn.Parameter]] = None,
         name: Optional[str] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name)
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.asarray(length, **factory_kwargs)
         self.voltage = (
-            torch.as_tensor(voltage, **factory_kwargs)
+            jnp.asarray(voltage, **factory_kwargs)
             if voltage is not None
-            else torch.tensor(0.0, **factory_kwargs)
+            else jnp.zeros_like(length)
         )
         self.phase = (
-            torch.as_tensor(phase, **factory_kwargs)
+            jnp.asarray(phase, **factory_kwargs)
             if phase is not None
-            else torch.tensor(0.0, **factory_kwargs)
+            else jnp.zeros_like(length)
         )
         self.frequency = (
-            torch.as_tensor(frequency, **factory_kwargs)
+            jnp.asarray(frequency, **factory_kwargs)
             if frequency is not None
-            else torch.tensor(0.0, **factory_kwargs)
+            else jnp.zeros_like(length)
         )
 
     @property
@@ -73,7 +69,7 @@ class Cavity(Element):
     def is_skippable(self) -> bool:
         return not self.is_active
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         # There used to be a check for voltage > 0 here, where the cavity transfer map
         # was only computed for the elements with voltage > 0 and a basermatrix was
         # used otherwise. This was removed because it was causing issues with the
@@ -111,35 +107,35 @@ class Cavity(Element):
             device=device, dtype=dtype
         )
         igamma2[mask] = 1 / g0[mask] ** 2
-        beta0[mask] = torch.sqrt(1 - igamma2[mask])
+        beta0[mask] = jnp.sqrt(1 - igamma2[mask])
 
-        phi = torch.deg2rad(self.phase)
+        phi = jnp.deg2rad(self.phase)
 
         tm = self.transfer_map(incoming.energy)
         if isinstance(incoming, ParameterBeam):
-            outgoing_mu = torch.matmul(tm, incoming._mu.unsqueeze(-1)).squeeze(-1)
-            outgoing_cov = torch.matmul(
-                tm, torch.matmul(incoming._cov, tm.transpose(-2, -1))
+            outgoing_mu = jnp.matmul(tm, incoming._mu.unsqueeze(-1)).squeeze(-1)
+            outgoing_cov = jnp.matmul(
+                tm, jnp.matmul(incoming._cov, tm.transpose(-2, -1))
             )
         else:  # ParticleBeam
-            outgoing_particles = torch.matmul(incoming.particles, tm.transpose(-2, -1))
-        delta_energy = self.voltage * torch.cos(phi)
+            outgoing_particles = jnp.matmul(incoming.particles, tm.transpose(-2, -1))
+        delta_energy = self.voltage * jnp.cos(phi)
 
         T566 = 1.5 * self.length * igamma2 / beta0**3
         T556 = torch.full_like(self.length, 0.0)
         T555 = torch.full_like(self.length, 0.0)
 
-        if torch.any(incoming.energy + delta_energy > 0):
-            k = 2 * torch.pi * self.frequency / constants.speed_of_light
+        if jnp.any(incoming.energy + delta_energy > 0):
+            k = 2 * jnp.pi * self.frequency / constants.speed_of_light
             outgoing_energy = incoming.energy + delta_energy
             g1 = outgoing_energy / electron_mass_eV
-            beta1 = torch.sqrt(1 - 1 / g1**2)
+            beta1 = jnp.sqrt(1 - 1 / g1**2)
 
             if isinstance(incoming, ParameterBeam):
                 outgoing_mu[..., 5] = incoming._mu[..., 5] * incoming.energy * beta0 / (
                     outgoing_energy * beta1
                 ) + self.voltage * beta0 / (outgoing_energy * beta1) * (
-                    torch.cos(-incoming._mu[..., 4] * beta0 * k + phi) - torch.cos(phi)
+                    jnp.cos(-incoming._mu[..., 4] * beta0 * k + phi) - jnp.cos(phi)
                 )
                 outgoing_cov[..., 5, 5] = incoming._cov[..., 5, 5]
             else:  # ParticleBeam
@@ -154,18 +150,18 @@ class Cavity(Element):
                 ) / (
                     outgoing_energy.unsqueeze(-1) * beta1.unsqueeze(-1)
                 ) * (
-                    torch.cos(
+                    jnp.cos(
                         -1
                         * incoming.particles[..., 4]
                         * beta0.unsqueeze(-1)
                         * k.unsqueeze(-1)
                         + phi.unsqueeze(-1)
                     )
-                    - torch.cos(phi).unsqueeze(-1)
+                    - jnp.cos(phi).unsqueeze(-1)
                 )
 
             dgamma = self.voltage / electron_mass_eV
-            if torch.any(delta_energy > 0):
+            if jnp.any(delta_energy > 0):
                 T566 = (
                     self.length
                     * (beta0**3 * g0**3 - beta1**3 * g1**3)
@@ -178,7 +174,7 @@ class Cavity(Element):
                     * dgamma
                     * g0
                     * (beta1**3 * g1**3 + beta0 * (g0 - g1**3))
-                    * torch.sin(phi)
+                    * jnp.sin(phi)
                     / (beta1**3 * g1**3 * (g0 - g1) ** 2)
                 )
                 T555 = (
@@ -196,10 +192,10 @@ class Cavity(Element):
                             - 2
                         )
                         / (beta1**3 * g1**3 * (g0 - g1) ** 3)
-                        * torch.sin(phi) ** 2
+                        * jnp.sin(phi) ** 2
                         - (g1 * g0 * (beta1 * beta0 - 1) + 1)
                         / (beta1 * g1 * (g0 - g1) ** 2)
-                        * torch.cos(phi)
+                        * jnp.cos(phi)
                     )
                 )
 
@@ -249,57 +245,51 @@ class Cavity(Element):
             )
             return outgoing
 
-    def _cavity_rmatrix(self, energy: torch.Tensor) -> torch.Tensor:
+    def _cavity_rmatrix(self, energy: jax.Array) -> jax.Array:
         """Produces an R-matrix for a cavity when it is on, i.e. voltage > 0.0."""
         device = self.length.device
         dtype = self.length.dtype
 
-        phi = torch.deg2rad(self.phase)
-        delta_energy = self.voltage * torch.cos(phi)
+        phi = jnp.deg2rad(self.phase)
+        delta_energy = self.voltage * jnp.cos(phi)
         # Comment from Ocelot: Pure pi-standing-wave case
         eta = torch.tensor(1.0, device=device, dtype=dtype)
         Ei = energy / electron_mass_eV
         Ef = (energy + delta_energy) / electron_mass_eV
         Ep = (Ef - Ei) / self.length  # Derivative of the energy
-        assert torch.all(Ei > 0), "Initial energy must be larger than 0"
+        assert jnp.all(Ei > 0), "Initial energy must be larger than 0"
 
-        alpha = torch.sqrt(eta / 8) / torch.cos(phi) * torch.log(Ef / Ei)
+        alpha = jnp.sqrt(eta / 8) / jnp.cos(phi) * jnp.log(Ef / Ei)
 
-        r11 = torch.cos(alpha) - torch.sqrt(2 / eta) * torch.cos(phi) * torch.sin(alpha)
+        r11 = jnp.cos(alpha) - jnp.sqrt(2 / eta) * jnp.cos(phi) * jnp.sin(alpha)
 
         # In Ocelot r12 is defined as below only if abs(Ep) > 10, and self.length
         # otherwise. This is implemented differently here in order to achieve results
         # closer to Bmad.
-        r12 = torch.sqrt(8 / eta) * Ei / Ep * torch.cos(phi) * torch.sin(alpha)
+        r12 = jnp.sqrt(8 / eta) * Ei / Ep * jnp.cos(phi) * jnp.sin(alpha)
 
         r21 = (
             -Ep
             / Ef
-            * (
-                torch.cos(phi) / torch.sqrt(2 * eta)
-                + torch.sqrt(eta / 8) / torch.cos(phi)
-            )
-            * torch.sin(alpha)
+            * (jnp.cos(phi) / jnp.sqrt(2 * eta) + jnp.sqrt(eta / 8) / jnp.cos(phi))
+            * jnp.sin(alpha)
         )
 
         r22 = (
             Ei
             / Ef
-            * (
-                torch.cos(alpha)
-                + torch.sqrt(2 / eta) * torch.cos(phi) * torch.sin(alpha)
-            )
+            * (jnp.cos(alpha) + jnp.sqrt(2 / eta) * jnp.cos(phi) * jnp.sin(alpha))
         )
 
         r56 = torch.tensor(0.0)
         beta0 = torch.tensor(1.0)
         beta1 = torch.tensor(1.0)
 
-        k = 2 * torch.pi * self.frequency / torch.tensor(constants.speed_of_light)
+        k = 2 * jnp.pi * self.frequency / torch.tensor(constants.speed_of_light)
         r55_cor = 0.0
-        if torch.any((self.voltage != 0) & (energy != 0)):  # TODO: Do we need this if?
-            beta0 = torch.sqrt(1 - 1 / Ei**2)
-            beta1 = torch.sqrt(1 - 1 / Ef**2)
+        if jnp.any((self.voltage != 0) & (energy != 0)):  # TODO: Do we need this if?
+            beta0 = jnp.sqrt(1 - 1 / Ei**2)
+            beta1 = jnp.sqrt(1 - 1 / Ef**2)
 
             r56 = -self.length / (Ef**2 * Ei * beta1) * (Ef + Ei) / (beta1 + beta0)
             g0 = Ei
@@ -310,15 +300,15 @@ class Cavity(Element):
                 * beta0
                 * self.voltage
                 / electron_mass_eV
-                * torch.sin(phi)
+                * jnp.sin(phi)
                 * (g0 * g1 * (beta0 * beta1 - 1) + 1)
                 / (beta1 * g1 * (g0 - g1) ** 2)
             )
 
         r66 = Ei / Ef * beta0 / beta1
-        r65 = k * torch.sin(phi) * self.voltage / (Ef * beta1 * electron_mass_eV)
+        r65 = k * jnp.sin(phi) * self.voltage / (Ef * beta1 * electron_mass_eV)
 
-        R = torch.eye(7, device=device, dtype=dtype).repeat((*self.length.shape, 1, 1))
+        R = jnp.eye(7, device=device, dtype=dtype).repeat((*self.length.shape, 1, 1))
         R[..., 0, 0] = r11
         R[..., 0, 1] = r12
         R[..., 1, 0] = r21
@@ -343,7 +333,7 @@ class Cavity(Element):
             name=self.name,
         )
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         # TODO: Implement splitting for cavity properly, for now just returns the
         # element itself
         return [self]

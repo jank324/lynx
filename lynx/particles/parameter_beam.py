@@ -1,14 +1,13 @@
 from typing import Optional
 
+import jax
+import jax.numpy as jnp
 import numpy as np
-import torch
 from scipy.constants import physical_constants
 
 from .beam import Beam
 
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class ParameterBeam(Beam):
@@ -25,46 +24,46 @@ class ParameterBeam(Beam):
 
     def __init__(
         self,
-        mu: torch.Tensor,
-        cov: torch.Tensor,
-        energy: torch.Tensor,
-        total_charge: Optional[torch.Tensor] = None,
+        mu: jax.Array,
+        cov: jax.Array,
+        energy: jax.Array,
+        total_charge: Optional[jax.Array] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
 
-        self._mu = torch.as_tensor(mu, **factory_kwargs)
-        self._cov = torch.as_tensor(cov, **factory_kwargs)
+        self._mu = jnp.asarray(mu, **factory_kwargs)
+        self._cov = jnp.asarray(cov, **factory_kwargs)
         total_charge = (
             total_charge
             if total_charge is not None
-            else torch.tensor([0.0], **factory_kwargs)
+            else jnp.asarray([0.0], **factory_kwargs)
         )
-        self.total_charge = torch.as_tensor(total_charge, **factory_kwargs)
-        self.energy = torch.as_tensor(energy, **factory_kwargs)
+        self.total_charge = jnp.asarray(total_charge, **factory_kwargs)
+        self.energy = jnp.asarray(energy, **factory_kwargs)
 
     @classmethod
     def from_parameters(
         cls,
-        mu_x: Optional[torch.Tensor] = None,
-        mu_xp: Optional[torch.Tensor] = None,
-        mu_y: Optional[torch.Tensor] = None,
-        mu_yp: Optional[torch.Tensor] = None,
-        sigma_x: Optional[torch.Tensor] = None,
-        sigma_xp: Optional[torch.Tensor] = None,
-        sigma_y: Optional[torch.Tensor] = None,
-        sigma_yp: Optional[torch.Tensor] = None,
-        sigma_s: Optional[torch.Tensor] = None,
-        sigma_p: Optional[torch.Tensor] = None,
-        cor_x: Optional[torch.Tensor] = None,
-        cor_y: Optional[torch.Tensor] = None,
-        cor_s: Optional[torch.Tensor] = None,
-        energy: Optional[torch.Tensor] = None,
-        total_charge: Optional[torch.Tensor] = None,
+        mu_x: Optional[jax.Array] = None,
+        mu_xp: Optional[jax.Array] = None,
+        mu_y: Optional[jax.Array] = None,
+        mu_yp: Optional[jax.Array] = None,
+        sigma_x: Optional[jax.Array] = None,
+        sigma_xp: Optional[jax.Array] = None,
+        sigma_y: Optional[jax.Array] = None,
+        sigma_yp: Optional[jax.Array] = None,
+        sigma_s: Optional[jax.Array] = None,
+        sigma_p: Optional[jax.Array] = None,
+        cor_x: Optional[jax.Array] = None,
+        cor_y: Optional[jax.Array] = None,
+        cor_s: Optional[jax.Array] = None,
+        energy: Optional[jax.Array] = None,
+        total_charge: Optional[jax.Array] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> "ParameterBeam":
         # Figure out if arguments were passed, figure out their shape
         not_nones = [
@@ -95,38 +94,38 @@ class ParameterBeam(Beam):
             ), "Arguments must have the same shape."
 
         # Set default values without function call in function signature
-        mu_x = mu_x if mu_x is not None else torch.full(shape, 0.0)
-        mu_xp = mu_xp if mu_xp is not None else torch.full(shape, 0.0)
-        mu_y = mu_y if mu_y is not None else torch.full(shape, 0.0)
-        mu_yp = mu_yp if mu_yp is not None else torch.full(shape, 0.0)
-        sigma_x = sigma_x if sigma_x is not None else torch.full(shape, 175e-9)
-        sigma_xp = sigma_xp if sigma_xp is not None else torch.full(shape, 2e-7)
-        sigma_y = sigma_y if sigma_y is not None else torch.full(shape, 175e-9)
-        sigma_yp = sigma_yp if sigma_yp is not None else torch.full(shape, 2e-7)
-        sigma_s = sigma_s if sigma_s is not None else torch.full(shape, 1e-6)
-        sigma_p = sigma_p if sigma_p is not None else torch.full(shape, 1e-6)
-        cor_x = cor_x if cor_x is not None else torch.full(shape, 0.0)
-        cor_y = cor_y if cor_y is not None else torch.full(shape, 0.0)
-        cor_s = cor_s if cor_s is not None else torch.full(shape, 0.0)
-        energy = energy if energy is not None else torch.full(shape, 1e8)
+        mu_x = mu_x if mu_x is not None else jnp.full(shape, 0.0)
+        mu_xp = mu_xp if mu_xp is not None else jnp.full(shape, 0.0)
+        mu_y = mu_y if mu_y is not None else jnp.full(shape, 0.0)
+        mu_yp = mu_yp if mu_yp is not None else jnp.full(shape, 0.0)
+        sigma_x = sigma_x if sigma_x is not None else jnp.full(shape, 175e-9)
+        sigma_xp = sigma_xp if sigma_xp is not None else jnp.full(shape, 2e-7)
+        sigma_y = sigma_y if sigma_y is not None else jnp.full(shape, 175e-9)
+        sigma_yp = sigma_yp if sigma_yp is not None else jnp.full(shape, 2e-7)
+        sigma_s = sigma_s if sigma_s is not None else jnp.full(shape, 1e-6)
+        sigma_p = sigma_p if sigma_p is not None else jnp.full(shape, 1e-6)
+        cor_x = cor_x if cor_x is not None else jnp.full(shape, 0.0)
+        cor_y = cor_y if cor_y is not None else jnp.full(shape, 0.0)
+        cor_s = cor_s if cor_s is not None else jnp.full(shape, 0.0)
+        energy = energy if energy is not None else jnp.full(shape, 1e8)
         total_charge = (
-            total_charge if total_charge is not None else torch.full(shape, 0.0)
+            total_charge if total_charge is not None else jnp.full(shape, 0.0)
         )
 
-        mu = torch.stack(
+        mu = jnp.stack(
             [
                 mu_x,
                 mu_xp,
                 mu_y,
                 mu_yp,
-                torch.full(shape, 0.0),
-                torch.full(shape, 0.0),
-                torch.full(shape, 1.0),
+                jnp.full(shape, 0.0),
+                jnp.full(shape, 0.0),
+                jnp.full(shape, 1.0),
             ],
             dim=-1,
         )
 
-        cov = torch.zeros(*shape, 7, 7)
+        cov = jnp.zeros(*shape, 7, 7)
         cov[..., 0, 0] = sigma_x**2
         cov[..., 0, 1] = cor_x
         cov[..., 1, 0] = cor_x
@@ -147,19 +146,19 @@ class ParameterBeam(Beam):
     @classmethod
     def from_twiss(
         cls,
-        beta_x: Optional[torch.Tensor] = None,
-        alpha_x: Optional[torch.Tensor] = None,
-        emittance_x: Optional[torch.Tensor] = None,
-        beta_y: Optional[torch.Tensor] = None,
-        alpha_y: Optional[torch.Tensor] = None,
-        emittance_y: Optional[torch.Tensor] = None,
-        sigma_s: Optional[torch.Tensor] = None,
-        sigma_p: Optional[torch.Tensor] = None,
-        cor_s: Optional[torch.Tensor] = None,
-        energy: Optional[torch.Tensor] = None,
-        total_charge: Optional[torch.Tensor] = None,
+        beta_x: Optional[jax.Array] = None,
+        alpha_x: Optional[jax.Array] = None,
+        emittance_x: Optional[jax.Array] = None,
+        beta_y: Optional[jax.Array] = None,
+        alpha_y: Optional[jax.Array] = None,
+        emittance_y: Optional[jax.Array] = None,
+        sigma_s: Optional[jax.Array] = None,
+        sigma_p: Optional[jax.Array] = None,
+        cor_s: Optional[jax.Array] = None,
+        energy: Optional[jax.Array] = None,
+        total_charge: Optional[jax.Array] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> "ParameterBeam":
         # Figure out if arguments were passed, figure out their shape
         not_nones = [
@@ -186,22 +185,22 @@ class ParameterBeam(Beam):
             ), "Arguments must have the same shape."
 
         # Set default values without function call in function signature
-        beta_x = beta_x if beta_x is not None else torch.full(shape, 1.0)
-        alpha_x = alpha_x if alpha_x is not None else torch.full(shape, 0.0)
+        beta_x = beta_x if beta_x is not None else jnp.full(shape, 1.0)
+        alpha_x = alpha_x if alpha_x is not None else jnp.full(shape, 0.0)
         emittance_x = (
-            emittance_x if emittance_x is not None else torch.full(shape, 7.1971891e-13)
+            emittance_x if emittance_x is not None else jnp.full(shape, 7.1971891e-13)
         )
-        beta_y = beta_y if beta_y is not None else torch.full(shape, 1.0)
-        alpha_y = alpha_y if alpha_y is not None else torch.full(shape, 0.0)
+        beta_y = beta_y if beta_y is not None else jnp.full(shape, 1.0)
+        alpha_y = alpha_y if alpha_y is not None else jnp.full(shape, 0.0)
         emittance_y = (
-            emittance_y if emittance_y is not None else torch.full(shape, 7.1971891e-13)
+            emittance_y if emittance_y is not None else jnp.full(shape, 7.1971891e-13)
         )
-        sigma_s = sigma_s if sigma_s is not None else torch.full(shape, 1e-6)
-        sigma_p = sigma_p if sigma_p is not None else torch.full(shape, 1e-6)
-        cor_s = cor_s if cor_s is not None else torch.full(shape, 0.0)
-        energy = energy if energy is not None else torch.full(shape, 1e8)
+        sigma_s = sigma_s if sigma_s is not None else jnp.full(shape, 1e-6)
+        sigma_p = sigma_p if sigma_p is not None else jnp.full(shape, 1e-6)
+        cor_s = cor_s if cor_s is not None else jnp.full(shape, 0.0)
+        energy = energy if energy is not None else jnp.full(shape, 1e8)
         total_charge = (
-            total_charge if total_charge is not None else torch.full(shape, 0.0)
+            total_charge if total_charge is not None else jnp.full(shape, 0.0)
         )
 
         assert all(
@@ -211,10 +210,10 @@ class ParameterBeam(Beam):
             beta_y > 0
         ), "Beta function in y direction must be larger than 0 everywhere."
 
-        sigma_x = torch.sqrt(emittance_x * beta_x)
-        sigma_xp = torch.sqrt(emittance_x * (1 + alpha_x**2) / beta_x)
-        sigma_y = torch.sqrt(emittance_y * beta_y)
-        sigma_yp = torch.sqrt(emittance_y * (1 + alpha_y**2) / beta_y)
+        sigma_x = jnp.sqrt(emittance_x * beta_x)
+        sigma_xp = jnp.sqrt(emittance_x * (1 + alpha_x**2) / beta_x)
+        sigma_y = jnp.sqrt(emittance_y * beta_y)
+        sigma_yp = jnp.sqrt(emittance_y * (1 + alpha_y**2) / beta_y)
         cor_x = -emittance_x * alpha_x
         cor_y = -emittance_y * alpha_y
         return cls.from_parameters(
@@ -233,16 +232,16 @@ class ParameterBeam(Beam):
         )
 
     @classmethod
-    def from_ocelot(cls, parray, device=None, dtype=torch.float32) -> "ParameterBeam":
+    def from_ocelot(cls, parray, device=None, dtype=jnp.float32) -> "ParameterBeam":
         """Load an Ocelot ParticleArray `parray` as a Cheetah Beam."""
-        mu = torch.ones(7)
-        mu[:6] = torch.tensor(parray.rparticles.mean(axis=1), dtype=torch.float32)
+        mu = jnp.ones(7)
+        mu[:6] = jnp.array(parray.rparticles.mean(axis=1), dtype=jnp.float32)
 
-        cov = torch.zeros(7, 7)
-        cov[:6, :6] = torch.tensor(np.cov(parray.rparticles), dtype=torch.float32)
+        cov = jnp.zeros(7, 7)
+        cov[:6, :6] = jnp.array(np.cov(parray.rparticles), dtype=jnp.float32)
 
-        energy = torch.tensor(1e9 * parray.E, dtype=torch.float32)
-        total_charge = torch.tensor(np.sum(parray.q_array), dtype=torch.float32)
+        energy = jnp.array(1e9 * parray.E, dtype=jnp.float32)
+        total_charge = jnp.array(np.sum(parray.q_array), dtype=jnp.float32)
 
         return cls(
             mu=mu.unsqueeze(0),
@@ -254,23 +253,23 @@ class ParameterBeam(Beam):
         )
 
     @classmethod
-    def from_astra(cls, path: str, device=None, dtype=torch.float32) -> "ParameterBeam":
+    def from_astra(cls, path: str, device=None, dtype=jnp.float32) -> "ParameterBeam":
         """Load an Astra particle distribution as a Cheetah Beam."""
         from lynx.converters.astra import from_astrabeam
 
         particles, energy, particle_charges = from_astrabeam(path)
-        mu = torch.ones(7)
-        mu[:6] = torch.tensor(particles.mean(axis=0))
+        mu = jnp.ones(7)
+        mu[:6] = jnp.array(particles.mean(axis=0))
 
-        cov = torch.zeros(7, 7)
-        cov[:6, :6] = torch.tensor(np.cov(particles.transpose()), dtype=torch.float32)
+        cov = jnp.zeros(7, 7)
+        cov[:6, :6] = jnp.array(jnp.cov(particles.transpose()), dtype=jnp.float32)
 
-        total_charge = torch.tensor(np.sum(particle_charges), dtype=torch.float32)
+        total_charge = jnp.array(np.sum(particle_charges), dtype=jnp.float32)
 
         return cls(
             mu=mu.unsqueeze(0),
             cov=cov.unsqueeze(0),
-            energy=torch.tensor(energy, dtype=torch.float32).unsqueeze(0),
+            energy=jnp.array(energy, dtype=jnp.float32).unsqueeze(0),
             total_charge=total_charge.unsqueeze(0),
             device=device,
             dtype=dtype,
@@ -278,20 +277,20 @@ class ParameterBeam(Beam):
 
     def transformed_to(
         self,
-        mu_x: Optional[torch.Tensor] = None,
-        mu_xp: Optional[torch.Tensor] = None,
-        mu_y: Optional[torch.Tensor] = None,
-        mu_yp: Optional[torch.Tensor] = None,
-        sigma_x: Optional[torch.Tensor] = None,
-        sigma_xp: Optional[torch.Tensor] = None,
-        sigma_y: Optional[torch.Tensor] = None,
-        sigma_yp: Optional[torch.Tensor] = None,
-        sigma_s: Optional[torch.Tensor] = None,
-        sigma_p: Optional[torch.Tensor] = None,
-        energy: Optional[torch.Tensor] = None,
-        total_charge: Optional[torch.Tensor] = None,
+        mu_x: Optional[jax.Array] = None,
+        mu_xp: Optional[jax.Array] = None,
+        mu_y: Optional[jax.Array] = None,
+        mu_yp: Optional[jax.Array] = None,
+        sigma_x: Optional[jax.Array] = None,
+        sigma_xp: Optional[jax.Array] = None,
+        sigma_y: Optional[jax.Array] = None,
+        sigma_yp: Optional[jax.Array] = None,
+        sigma_s: Optional[jax.Array] = None,
+        sigma_p: Optional[jax.Array] = None,
+        energy: Optional[jax.Array] = None,
+        total_charge: Optional[jax.Array] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> "ParameterBeam":
         """
         Create version of this beam that is transformed to new beam parameters.
@@ -370,62 +369,62 @@ class ParameterBeam(Beam):
         )
 
     @property
-    def mu_x(self) -> torch.Tensor:
+    def mu_x(self) -> jax.Array:
         return self._mu[..., 0]
 
     @property
-    def sigma_x(self) -> torch.Tensor:
-        return torch.sqrt(torch.clamp_min(self._cov[..., 0, 0], 1e-20))
+    def sigma_x(self) -> jax.Array:
+        return jnp.sqrt(jnp.clamp_min(self._cov[..., 0, 0], 1e-20))
 
     @property
-    def mu_xp(self) -> torch.Tensor:
+    def mu_xp(self) -> jax.Array:
         return self._mu[..., 1]
 
     @property
-    def sigma_xp(self) -> torch.Tensor:
-        return torch.sqrt(torch.clamp_min(self._cov[..., 1, 1], 1e-20))
+    def sigma_xp(self) -> jax.Array:
+        return jnp.sqrt(jnp.clamp_min(self._cov[..., 1, 1], 1e-20))
 
     @property
-    def mu_y(self) -> torch.Tensor:
+    def mu_y(self) -> jax.Array:
         return self._mu[..., 2]
 
     @property
-    def sigma_y(self) -> torch.Tensor:
-        return torch.sqrt(torch.clamp_min(self._cov[..., 2, 2], 1e-20))
+    def sigma_y(self) -> jax.Array:
+        return jnp.sqrt(jnp.clamp_min(self._cov[..., 2, 2], 1e-20))
 
     @property
-    def mu_yp(self) -> torch.Tensor:
+    def mu_yp(self) -> jax.Array:
         return self._mu[..., 3]
 
     @property
-    def sigma_yp(self) -> torch.Tensor:
-        return torch.sqrt(torch.clamp_min(self._cov[..., 3, 3], 1e-20))
+    def sigma_yp(self) -> jax.Array:
+        return jnp.sqrt(jnp.clamp_min(self._cov[..., 3, 3], 1e-20))
 
     @property
-    def mu_s(self) -> torch.Tensor:
+    def mu_s(self) -> jax.Array:
         return self._mu[..., 4]
 
     @property
-    def sigma_s(self) -> torch.Tensor:
-        return torch.sqrt(torch.clamp_min(self._cov[..., 4, 4], 1e-20))
+    def sigma_s(self) -> jax.Array:
+        return jnp.sqrt(jnp.clamp_min(self._cov[..., 4, 4], 1e-20))
 
     @property
-    def mu_p(self) -> torch.Tensor:
+    def mu_p(self) -> jax.Array:
         return self._mu[..., 5]
 
     @property
-    def sigma_p(self) -> torch.Tensor:
-        return torch.sqrt(torch.clamp_min(self._cov[..., 5, 5], 1e-20))
+    def sigma_p(self) -> jax.Array:
+        return jnp.sqrt(jnp.clamp_min(self._cov[..., 5, 5], 1e-20))
 
     @property
-    def sigma_xxp(self) -> torch.Tensor:
+    def sigma_xxp(self) -> jax.Array:
         return self._cov[..., 0, 1]
 
     @property
-    def sigma_yyp(self) -> torch.Tensor:
+    def sigma_yyp(self) -> jax.Array:
         return self._cov[..., 2, 3]
 
-    def broadcast(self, shape: torch.Size) -> "ParameterBeam":
+    def broadcast(self, shape: tuple) -> "ParameterBeam":
         return self.__class__(
             mu=self._mu.repeat((*shape, 1)),
             cov=self._cov.repeat((*shape, 1, 1)),

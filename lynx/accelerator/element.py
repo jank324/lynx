@@ -1,42 +1,40 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
+import equinox as eqx
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import nn
 
 from lynx.particles import Beam, ParameterBeam, ParticleBeam
 from lynx.utils import UniqueNameGenerator
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
-class Element(ABC, nn.Module):
+class Element(ABC, eqx.Module):
     """
     Base class for elements of particle accelerators.
 
     :param name: Unique identifier of the element.
     """
 
-    length: torch.Tensor = torch.zeros((1))
+    length: jax.Array = jnp.zeros((1))
 
     def __init__(self, name: Optional[str] = None) -> None:
         super().__init__()
 
         self.name = name if name is not None else generate_unique_name()
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         r"""
         Generates the element's transfer map that describes how the beam and its
         particles are transformed when traveling through the element.
@@ -72,8 +70,8 @@ class Element(ABC, nn.Module):
             return incoming
         elif isinstance(incoming, ParameterBeam):
             tm = self.transfer_map(incoming.energy)
-            mu = torch.matmul(tm, incoming._mu.unsqueeze(-1)).squeeze(-1)
-            cov = torch.matmul(tm, torch.matmul(incoming._cov, tm.transpose(-2, -1)))
+            mu = jnp.matmul(tm, incoming._mu.unsqueeze(-1)).squeeze(-1)
+            cov = jnp.matmul(tm, jnp.matmul(incoming._cov, tm.transpose(-2, -1)))
             return ParameterBeam(
                 mu,
                 cov,
@@ -84,7 +82,7 @@ class Element(ABC, nn.Module):
             )
         elif isinstance(incoming, ParticleBeam):
             tm = self.transfer_map(incoming.energy)
-            new_particles = torch.matmul(incoming.particles, tm.transpose(-2, -1))
+            new_particles = jnp.matmul(incoming.particles, tm.transpose(-2, -1))
             return ParticleBeam(
                 new_particles,
                 incoming.energy,
@@ -126,7 +124,7 @@ class Element(ABC, nn.Module):
         return []
 
     @abstractmethod
-    def split(self, resolution: torch.Tensor) -> list["Element"]:
+    def split(self, resolution: jax.Array) -> list["Element"]:
         """
         Split the element into slices no longer than `resolution`. Some elements may not
         be splittable, in which case a list containing only the element itself is

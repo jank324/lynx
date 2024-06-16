@@ -1,11 +1,12 @@
 from typing import Literal, Optional, Union
 
+import equinox as eqx
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from matplotlib.patches import Rectangle
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size, nn
 
 from lynx.particles import Beam, ParticleBeam
 from lynx.utils import UniqueNameGenerator
@@ -14,14 +15,10 @@ from .element import Element
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Aperture(Element):
@@ -37,26 +34,22 @@ class Aperture(Element):
 
     def __init__(
         self,
-        x_max: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        y_max: Optional[Union[torch.Tensor, nn.Parameter]] = None,
+        x_max: Optional[Union[jax.Array, nn.Parameter]] = None,
+        y_max: Optional[Union[jax.Array, nn.Parameter]] = None,
         shape: Literal["rectangular", "elliptical"] = "rectangular",
         is_active: bool = True,
         name: Optional[str] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name)
 
         self.x_max = (
-            torch.as_tensor(x_max, **factory_kwargs)
-            if x_max is not None
-            else torch.tensor(float("inf"), **factory_kwargs)
+            jnp.asarray(x_max, **factory_kwargs) if x_max is not None else jnp.inf
         )
         self.y_max = (
-            torch.as_tensor(y_max, **factory_kwargs)
-            if y_max is not None
-            else torch.tensor(float("inf"), **factory_kwargs)
+            jnp.asarray(y_max, **factory_kwargs) if y_max is not None else jnp.inf
         )
         self.shape = shape
         self.is_active = is_active
@@ -67,11 +60,11 @@ class Aperture(Element):
     def is_skippable(self) -> bool:
         return not self.is_active
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         device = self.x_max.device
         dtype = self.x_max.dtype
 
-        return torch.eye(7, device=device, dtype=dtype).repeat((*energy.shape, 1, 1))
+        return jnp.eye(7, device=device, dtype=dtype).repeat((*energy.shape, 1, 1))
 
     def track(self, incoming: Beam) -> Beam:
         # Only apply aperture to particle beams and if the element is active
@@ -85,9 +78,9 @@ class Aperture(Element):
         ], f"Unknown aperture shape {self.shape}"
 
         if self.shape == "rectangular":
-            survived_mask = torch.logical_and(
-                torch.logical_and(incoming.xs > -self.x_max, incoming.xs < self.x_max),
-                torch.logical_and(incoming.ys > -self.y_max, incoming.ys < self.y_max),
+            survived_mask = jnp.logical_and(
+                jnp.logical_and(incoming.xs > -self.x_max, incoming.xs < self.x_max),
+                jnp.logical_and(incoming.ys > -self.y_max, incoming.ys < self.y_max),
             )
         elif self.shape == "elliptical":
             survived_mask = (
@@ -97,10 +90,10 @@ class Aperture(Element):
 
         outgoing_particle_charges = incoming.particle_charges[survived_mask]
 
-        self.lost_particles = incoming.particles[torch.logical_not(survived_mask)]
+        self.lost_particles = incoming.particles[jnp.logical_not(survived_mask)]
 
         self.lost_particle_charges = incoming.particle_charges[
-            torch.logical_not(survived_mask)
+            jnp.logical_not(survived_mask)
         ]
 
         return (
@@ -126,7 +119,7 @@ class Aperture(Element):
         new_aperture.length = self.length.repeat(shape)
         return new_aperture
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         # TODO: Implement splitting for aperture properly, for now just return self
         return [self]
 

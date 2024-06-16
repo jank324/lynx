@@ -1,11 +1,11 @@
 from typing import Optional, Union
 
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from matplotlib.patches import Rectangle
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size, nn
 
 from lynx.track_methods import misalignment_matrix
 from lynx.utils import UniqueNameGenerator
@@ -14,14 +14,10 @@ from .element import Element
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Solenoid(Element):
@@ -40,47 +36,47 @@ class Solenoid(Element):
 
     def __init__(
         self,
-        length: Union[torch.Tensor, nn.Parameter] = None,
-        k: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        misalignment: Optional[Union[torch.Tensor, nn.Parameter]] = None,
+        length: Union[jax.Array, nn.Parameter] = None,
+        k: Optional[Union[jax.Array, nn.Parameter]] = None,
+        misalignment: Optional[Union[jax.Array, nn.Parameter]] = None,
         name: Optional[str] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name)
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.asarray(length, **factory_kwargs)
         self.k = (
-            torch.as_tensor(k, **factory_kwargs)
+            jnp.asarray(k, **factory_kwargs)
             if k is not None
-            else torch.zeros_like(self.length)
+            else jnp.zeros_like(self.length)
         )
         self.misalignment = (
-            torch.as_tensor(misalignment, **factory_kwargs)
+            jnp.asarray(misalignment, **factory_kwargs)
             if misalignment is not None
-            else torch.zeros((*self.length.shape[:-1], 2), **factory_kwargs)
+            else jnp.zeros((*self.length.shape[:-1], 2), **factory_kwargs)
         )
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         device = self.length.device
         dtype = self.length.dtype
 
         gamma = energy / rest_energy.to(device=device, dtype=dtype)
-        c = torch.cos(self.length * self.k)
-        s = torch.sin(self.length * self.k)
+        c = jnp.cos(self.length * self.k)
+        s = jnp.sin(self.length * self.k)
 
-        s_k = torch.empty_like(self.length)
+        s_k = jnp.empty_like(self.length)
         s_k[self.k == 0] = self.length[self.k == 0]
         s_k[self.k != 0] = s[self.k != 0] / self.k[self.k != 0]
 
-        r56 = torch.zeros_like(self.length)
+        r56 = jnp.zeros_like(self.length)
         if gamma != 0:
             gamma2 = gamma * gamma
-            beta = torch.sqrt(1.0 - 1.0 / gamma2)
+            beta = jnp.sqrt(1.0 - 1.0 / gamma2)
             r56 -= self.length / (beta * beta * gamma2)
 
-        R = torch.eye(7, device=device, dtype=dtype).repeat((*self.length.shape, 1, 1))
+        R = jnp.eye(7, device=device, dtype=dtype).repeat((*self.length.shape, 1, 1))
         R[..., 0, 0] = c**2
         R[..., 0, 1] = c * s_k
         R[..., 0, 2] = s * c
@@ -101,11 +97,11 @@ class Solenoid(Element):
 
         R = R.real
 
-        if torch.all(self.misalignment == 0):
+        if jnp.all(self.misalignment == 0):
             return R
         else:
             R_entry, R_exit = misalignment_matrix(self.misalignment)
-            R = torch.einsum("...ij,...jk,...kl->...il", R_exit, R, R_entry)
+            R = jnp.einsum("...ij,...jk,...kl->...il", R_exit, R, R_entry)
             return R
 
     def broadcast(self, shape: Size) -> Element:
@@ -123,7 +119,7 @@ class Solenoid(Element):
     def is_skippable(self) -> bool:
         return True
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         # TODO: Implement splitting for solenoid properly, for now just return self
         return [self]
 

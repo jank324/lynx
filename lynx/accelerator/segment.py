@@ -2,12 +2,13 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Optional, Union
 
+import equinox as eqx
+import jax
+import jax.numpy as jnp
 import matplotlib
 import matplotlib.pyplot as plt
-import torch
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size, nn
 
 from lynx.converters.bmad import convert_bmad_lattice
 from lynx.converters.nxtables import read_nx_tables
@@ -22,14 +23,10 @@ from .marker import Marker
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Segment(Element):
@@ -255,7 +252,7 @@ class Segment(Element):
         name: Optional[str] = None,
         warnings: bool = True,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
         **kwargs,
     ) -> "Segment":
         """
@@ -322,20 +319,20 @@ class Segment(Element):
         return all(element.is_skippable for element in self.elements)
 
     @property
-    def length(self) -> torch.Tensor:
-        lengths = torch.stack(
+    def length(self) -> jax.Array:
+        lengths = jnp.stack(
             [element.length for element in self.elements],
             dim=1,
         )
-        return torch.sum(lengths, dim=1)
+        return jnp.sum(lengths, dim=1)
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         if self.is_skippable:
-            tm = torch.eye(7, device=energy.device, dtype=energy.dtype).repeat(
+            tm = jnp.eye(7, device=energy.device, dtype=energy.dtype).repeat(
                 (*self.length.shape, 1, 1)
             )
             for element in self.elements:
-                tm = torch.matmul(element.transfer_map(energy), tm)
+                tm = jnp.matmul(element.transfer_map(energy), tm)
             return tm
         else:
             return None
@@ -364,7 +361,7 @@ class Segment(Element):
             name=self.name,
         )
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         return [
             split_element
             for element in self.elements

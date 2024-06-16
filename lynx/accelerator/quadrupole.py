@@ -1,12 +1,12 @@
 from typing import Optional, Union
 
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from matplotlib.patches import Rectangle
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size, nn
 
 from lynx.track_methods import base_rmatrix, misalignment_matrix
 from lynx.utils import UniqueNameGenerator
@@ -15,14 +15,10 @@ from .element import Element
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Quadrupole(Element):
@@ -39,48 +35,48 @@ class Quadrupole(Element):
 
     def __init__(
         self,
-        length: Union[torch.Tensor, nn.Parameter],
-        k1: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        misalignment: Optional[Union[torch.Tensor, nn.Parameter]] = None,
-        tilt: Optional[Union[torch.Tensor, nn.Parameter]] = None,
+        length: Union[jax.Array, nn.Parameter],
+        k1: Optional[Union[jax.Array, nn.Parameter]] = None,
+        misalignment: Optional[Union[jax.Array, nn.Parameter]] = None,
+        tilt: Optional[Union[jax.Array, nn.Parameter]] = None,
         name: Optional[str] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name)
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.asarray(length, **factory_kwargs)
         self.k1 = (
-            torch.as_tensor(k1, **factory_kwargs)
+            jnp.asarray(k1, **factory_kwargs)
             if k1 is not None
-            else torch.zeros_like(self.length)
+            else jnp.zeros_like(self.length)
         )
         self.misalignment = (
-            torch.as_tensor(misalignment, **factory_kwargs)
+            jnp.asarray(misalignment, **factory_kwargs)
             if misalignment is not None
-            else torch.zeros((*self.length.shape, 2), **factory_kwargs)
+            else jnp.zeros((*self.length.shape, 2), **factory_kwargs)
         )
         self.tilt = (
-            torch.as_tensor(tilt, **factory_kwargs)
+            jnp.asarray(tilt, **factory_kwargs)
             if tilt is not None
-            else torch.zeros_like(self.length)
+            else jnp.zeros_like(self.length)
         )
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         R = base_rmatrix(
             length=self.length,
             k1=self.k1,
-            hx=torch.zeros_like(self.length),
+            hx=jnp.zeros_like(self.length),
             tilt=self.tilt,
             energy=energy,
         )
 
-        if torch.all(self.misalignment == 0):
+        if jnp.all(self.misalignment == 0):
             return R
         else:
             R_entry, R_exit = misalignment_matrix(self.misalignment)
-            R = torch.einsum("...ij,...jk,...kl->...il", R_exit, R, R_entry)
+            R = jnp.einsum("...ij,...jk,...kl->...il", R_exit, R, R_entry)
             return R
 
     def broadcast(self, shape: Size) -> Element:
@@ -100,12 +96,12 @@ class Quadrupole(Element):
     def is_active(self) -> bool:
         return any(self.k1 != 0)
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         split_elements = []
         remaining = self.length
         while remaining > 0:
             element = Quadrupole(
-                torch.min(resolution, remaining),
+                jnp.min(resolution, remaining),
                 self.k1,
                 misalignment=self.misalignment,
             )

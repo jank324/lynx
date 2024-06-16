@@ -1,4 +1,4 @@
-import torch
+import jax.numpy as jnp
 
 import lynx
 
@@ -18,14 +18,14 @@ def test_assert_ei_greater_zero():
     ```
     """
     cavity = lynx.Cavity(
-        length=torch.tensor([3.0441, 3.0441, 3.0441]),
-        voltage=torch.tensor([48198468.0, 48198468.0, 48198468.0]),
-        phase=torch.tensor([48198468.0, 48198468.0, 48198468.0]),
-        frequency=torch.tensor([2.8560e09, 2.8560e09, 2.8560e09]),
+        length=jnp.array([3.0441, 3.0441, 3.0441]),
+        voltage=jnp.array([48198468.0, 48198468.0, 48198468.0]),
+        phase=jnp.array([48198468.0, 48198468.0, 48198468.0]),
+        frequency=jnp.array([2.8560e09, 2.8560e09, 2.8560e09]),
         name="k26_2a",
     )
     beam = lynx.ParticleBeam.from_parameters(
-        num_particles=100_000, sigma_x=torch.tensor([1e-5])
+        num_particles=100_000, sigma_x=jnp.array([1e-5])
     ).broadcast((3,))
 
     _ = cavity.track(beam)

@@ -1,10 +1,10 @@
 from typing import Optional, Union
 
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size, nn
 
 from lynx.utils import UniqueNameGenerator
 
@@ -12,14 +12,10 @@ from .element import Element
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Drift(Element):
@@ -35,17 +31,17 @@ class Drift(Element):
 
     def __init__(
         self,
-        length: Union[torch.Tensor, nn.Parameter],
+        length: Union[jax.Array, nn.Parameter],
         name: Optional[str] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name)
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.asarray(length, **factory_kwargs)
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         assert (
             energy.shape == self.length.shape
         ), f"Beam shape {energy.shape} does not match element shape {self.length.shape}"
@@ -54,11 +50,11 @@ class Drift(Element):
         dtype = self.length.dtype
 
         gamma = energy / rest_energy.to(device=device, dtype=dtype)
-        igamma2 = torch.zeros_like(gamma)  # TODO: Effect on gradients?
+        igamma2 = jnp.zeros_like(gamma)  # TODO: Effect on gradients?
         igamma2[gamma != 0] = 1 / gamma[gamma != 0] ** 2
-        beta = torch.sqrt(1 - igamma2)
+        beta = jnp.sqrt(1 - igamma2)
 
-        tm = torch.eye(7, device=device, dtype=dtype).repeat((*self.length.shape, 1, 1))
+        tm = jnp.eye(7, device=device, dtype=dtype).repeat((*self.length.shape, 1, 1))
         tm[..., 0, 1] = self.length
         tm[..., 2, 3] = self.length
         tm[..., 4, 5] = -self.length / beta**2 * igamma2
@@ -72,11 +68,11 @@ class Drift(Element):
     def is_skippable(self) -> bool:
         return True
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         split_elements = []
         remaining = self.length
         while remaining > 0:
-            element = Drift(torch.min(resolution, remaining))
+            element = Drift(jnp.min(resolution, remaining))
             split_elements.append(element)
             remaining -= resolution
         return split_elements

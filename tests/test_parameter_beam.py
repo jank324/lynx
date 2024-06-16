@@ -1,5 +1,5 @@
+import jax.numpy as jnp
 import numpy as np
-import torch
 
 from lynx import ParameterBeam
 
@@ -9,20 +9,20 @@ def test_create_from_parameters():
     Test that a `ParameterBeam` created from parameters actually has those parameters.
     """
     beam = ParameterBeam.from_parameters(
-        mu_x=torch.tensor([1e-5]),
-        mu_xp=torch.tensor([1e-7]),
-        mu_y=torch.tensor([2e-5]),
-        mu_yp=torch.tensor([2e-7]),
-        sigma_x=torch.tensor([1.75e-7]),
-        sigma_xp=torch.tensor([2e-7]),
-        sigma_y=torch.tensor([1.75e-7]),
-        sigma_yp=torch.tensor([2e-7]),
-        sigma_s=torch.tensor([0.000001]),
-        sigma_p=torch.tensor([0.000001]),
-        cor_x=torch.tensor([0.0]),
-        cor_y=torch.tensor([0.0]),
-        cor_s=torch.tensor([0.0]),
-        energy=torch.tensor([1e7]),
+        mu_x=jnp.array([1e-5]),
+        mu_xp=jnp.array([1e-7]),
+        mu_y=jnp.array([2e-5]),
+        mu_yp=jnp.array([2e-7]),
+        sigma_x=jnp.array([1.75e-7]),
+        sigma_xp=jnp.array([2e-7]),
+        sigma_y=jnp.array([1.75e-7]),
+        sigma_yp=jnp.array([2e-7]),
+        sigma_s=jnp.array([0.000001]),
+        sigma_p=jnp.array([0.000001]),
+        cor_x=jnp.array([0.0]),
+        cor_y=jnp.array([0.0]),
+        cor_s=jnp.array([0.0]),
+        energy=jnp.array([1e7]),
     )
 
     assert np.isclose(beam.mu_x.cpu().numpy(), 1e-5)
@@ -45,18 +45,18 @@ def test_transform_to():
     """
     original_beam = ParameterBeam.from_parameters()
     transformed_beam = original_beam.transformed_to(
-        mu_x=torch.tensor([1e-5]),
-        mu_xp=torch.tensor([1e-7]),
-        mu_y=torch.tensor([2e-5]),
-        mu_yp=torch.tensor([2e-7]),
-        sigma_x=torch.tensor([1.75e-7]),
-        sigma_xp=torch.tensor([2e-7]),
-        sigma_y=torch.tensor([1.75e-7]),
-        sigma_yp=torch.tensor([2e-7]),
-        sigma_s=torch.tensor([0.000001]),
-        sigma_p=torch.tensor([0.000001]),
-        energy=torch.tensor([1e7]),
-        total_charge=torch.tensor([1e-9]),
+        mu_x=jnp.array([1e-5]),
+        mu_xp=jnp.array([1e-7]),
+        mu_y=jnp.array([2e-5]),
+        mu_yp=jnp.array([2e-7]),
+        sigma_x=jnp.array([1.75e-7]),
+        sigma_xp=jnp.array([2e-7]),
+        sigma_y=jnp.array([1.75e-7]),
+        sigma_yp=jnp.array([2e-7]),
+        sigma_s=jnp.array([0.000001]),
+        sigma_p=jnp.array([0.000001]),
+        energy=jnp.array([1e7]),
+        total_charge=jnp.array([1e-9]),
     )
 
     assert isinstance(transformed_beam, ParameterBeam)
@@ -80,13 +80,13 @@ def test_from_twiss_to_twiss():
     parameters.
     """
     beam = ParameterBeam.from_twiss(
-        beta_x=torch.tensor([5.91253676811640894]),
-        alpha_x=torch.tensor([3.55631307633660354]),
-        emittance_x=torch.tensor([3.494768647122823e-09]),
-        beta_y=torch.tensor([5.91253676811640982]),
-        alpha_y=torch.tensor([2e-7]),
-        emittance_y=torch.tensor([3.497810737006068e-09]),
-        energy=torch.tensor([6e6]),
+        beta_x=jnp.array([5.91253676811640894]),
+        alpha_x=jnp.array([3.55631307633660354]),
+        emittance_x=jnp.array([3.494768647122823e-09]),
+        beta_y=jnp.array([5.91253676811640982]),
+        alpha_y=jnp.array([2e-7]),
+        emittance_y=jnp.array([3.497810737006068e-09]),
+        energy=jnp.array([6e6]),
     )
 
     assert np.isclose(beam.beta_x.cpu().numpy(), 5.91253676811640894)

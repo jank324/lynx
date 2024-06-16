@@ -1,5 +1,5 @@
+import jax.numpy as jnp
 import numpy as np
-import torch
 
 from lynx import ParticleBeam
 
@@ -10,21 +10,21 @@ def test_create_from_parameters():
     """
     beam = ParticleBeam.from_parameters(
         num_particles=torch.tensor([1_000_000]),
-        mu_x=torch.tensor([1e-5]),
-        mu_xp=torch.tensor([1e-7]),
-        mu_y=torch.tensor([2e-5]),
-        mu_yp=torch.tensor([2e-7]),
-        sigma_x=torch.tensor([1.75e-7]),
-        sigma_xp=torch.tensor([2e-7]),
-        sigma_y=torch.tensor([1.75e-7]),
-        sigma_yp=torch.tensor([2e-7]),
-        sigma_s=torch.tensor([0.000001]),
-        sigma_p=torch.tensor([0.000001]),
-        cor_x=torch.tensor([0.0]),
-        cor_y=torch.tensor([0.0]),
-        cor_s=torch.tensor([0.0]),
-        energy=torch.tensor([1e7]),
-        total_charge=torch.tensor([1e-9]),
+        mu_x=jnp.array([1e-5]),
+        mu_xp=jnp.array([1e-7]),
+        mu_y=jnp.array([2e-5]),
+        mu_yp=jnp.array([2e-7]),
+        sigma_x=jnp.array([1.75e-7]),
+        sigma_xp=jnp.array([2e-7]),
+        sigma_y=jnp.array([1.75e-7]),
+        sigma_yp=jnp.array([2e-7]),
+        sigma_s=jnp.array([0.000001]),
+        sigma_p=jnp.array([0.000001]),
+        cor_x=jnp.array([0.0]),
+        cor_y=jnp.array([0.0]),
+        cor_s=jnp.array([0.0]),
+        energy=jnp.array([1e7]),
+        total_charge=jnp.array([1e-9]),
     )
 
     assert beam.num_particles == 1_000_000
@@ -49,18 +49,18 @@ def test_transform_to():
     """
     original_beam = ParticleBeam.from_parameters()
     transformed_beam = original_beam.transformed_to(
-        mu_x=torch.tensor([1e-5]),
-        mu_xp=torch.tensor([1e-7]),
-        mu_y=torch.tensor([2e-5]),
-        mu_yp=torch.tensor([2e-7]),
-        sigma_x=torch.tensor([1.75e-7]),
-        sigma_xp=torch.tensor([2e-7]),
-        sigma_y=torch.tensor([1.75e-7]),
-        sigma_yp=torch.tensor([2e-7]),
-        sigma_s=torch.tensor([0.000001]),
-        sigma_p=torch.tensor([0.000001]),
-        energy=torch.tensor([1e7]),
-        total_charge=torch.tensor([1e-9]),
+        mu_x=jnp.array([1e-5]),
+        mu_xp=jnp.array([1e-7]),
+        mu_y=jnp.array([2e-5]),
+        mu_yp=jnp.array([2e-7]),
+        sigma_x=jnp.array([1.75e-7]),
+        sigma_xp=jnp.array([2e-7]),
+        sigma_y=jnp.array([1.75e-7]),
+        sigma_yp=jnp.array([2e-7]),
+        sigma_s=jnp.array([0.000001]),
+        sigma_p=jnp.array([0.000001]),
+        energy=jnp.array([1e7]),
+        total_charge=jnp.array([1e-9]),
     )
 
     assert isinstance(transformed_beam, ParticleBeam)
@@ -87,13 +87,13 @@ def test_from_twiss_to_twiss():
     """
     beam = ParticleBeam.from_twiss(
         num_particles=torch.tensor([10_000_000]),
-        beta_x=torch.tensor([5.91253676811640894]),
-        alpha_x=torch.tensor([3.55631307633660354]),
-        emittance_x=torch.tensor([3.494768647122823e-09]),
-        beta_y=torch.tensor([5.91253676811640982]),
-        alpha_y=torch.tensor([1.0]),  # TODO: set realistic value
-        emittance_y=torch.tensor([3.497810737006068e-09]),
-        energy=torch.tensor([6e6]),
+        beta_x=jnp.array([5.91253676811640894]),
+        alpha_x=jnp.array([3.55631307633660354]),
+        emittance_x=jnp.array([3.494768647122823e-09]),
+        beta_y=jnp.array([5.91253676811640982]),
+        alpha_y=jnp.array([1.0]),  # TODO: set realistic value
+        emittance_y=jnp.array([3.497810737006068e-09]),
+        energy=jnp.array([6e6]),
     )
     # rather loose rtol is needed here due to the random sampling of the beam
     assert np.isclose(beam.beta_x.cpu().numpy(), 5.91253676811640894, rtol=1e-2)
@@ -111,16 +111,16 @@ def test_generate_uniform_ellipsoid_batched():
     parameters, i.e. the all particles are within the ellipsoid, and that the other
     beam parameters are as they would be for a Gaussian beam.
     """
-    radius_x = torch.tensor([1e-3, 2e-3])
-    radius_y = torch.tensor([1e-4, 2e-4])
-    radius_s = torch.tensor([1e-5, 2e-5])
+    radius_x = jnp.array([1e-3, 2e-3])
+    radius_y = jnp.array([1e-4, 2e-4])
+    radius_s = jnp.array([1e-5, 2e-5])
 
     num_particles = torch.tensor(1_000_000)
-    sigma_xp = torch.tensor([2e-7, 1e-7])
-    sigma_yp = torch.tensor([3e-7, 2e-7])
-    sigma_p = torch.tensor([0.000001, 0.000002])
-    energy = torch.tensor([1e7, 2e7])
-    total_charge = torch.tensor([1e-9, 3e-9])
+    sigma_xp = jnp.array([2e-7, 1e-7])
+    sigma_yp = jnp.array([3e-7, 2e-7])
+    sigma_p = jnp.array([0.000001, 0.000002])
+    energy = jnp.array([1e7, 2e7])
+    total_charge = jnp.array([1e-9, 3e-9])
 
     num_particles = torch.tensor(1_000_000)
     beam = ParticleBeam.uniform_3d_ellipsoid(
@@ -136,11 +136,11 @@ def test_generate_uniform_ellipsoid_batched():
     )
 
     assert beam.num_particles == num_particles
-    assert torch.all(beam.xs.abs().transpose(0, 1) <= radius_x)
-    assert torch.all(beam.ys.abs().transpose(0, 1) <= radius_y)
-    assert torch.all(beam.ss.abs().transpose(0, 1) <= radius_s)
-    assert torch.allclose(beam.sigma_xp, sigma_xp)
-    assert torch.allclose(beam.sigma_yp, sigma_yp)
-    assert torch.allclose(beam.sigma_p, sigma_p)
-    assert torch.allclose(beam.energy, energy)
-    assert torch.allclose(beam.total_charge, total_charge)
+    assert jnp.all(beam.xs.abs().transpose(0, 1) <= radius_x)
+    assert jnp.all(beam.ys.abs().transpose(0, 1) <= radius_y)
+    assert jnp.all(beam.ss.abs().transpose(0, 1) <= radius_s)
+    assert jnp.allclose(beam.sigma_xp, sigma_xp)
+    assert jnp.allclose(beam.sigma_yp, sigma_yp)
+    assert jnp.allclose(beam.sigma_p, sigma_p)
+    assert jnp.allclose(beam.energy, energy)
+    assert jnp.allclose(beam.total_charge, total_charge)

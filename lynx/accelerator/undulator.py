@@ -1,11 +1,11 @@
 from typing import Optional, Union
 
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from matplotlib.patches import Rectangle
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size, nn
 
 from lynx.utils import UniqueNameGenerator
 
@@ -13,14 +13,10 @@ from .element import Element
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Undulator(Element):
@@ -37,19 +33,19 @@ class Undulator(Element):
 
     def __init__(
         self,
-        length: Union[torch.Tensor, nn.Parameter],
+        length: Union[jax.Array, nn.Parameter],
         is_active: bool = False,
         name: Optional[str] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name)
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.asarray(length, **factory_kwargs)
         self.is_active = is_active
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         device = self.length.device
         dtype = self.length.dtype
 
@@ -60,7 +56,7 @@ class Undulator(Element):
             else torch.tensor(0.0, device=device, dtype=dtype)
         )
 
-        tm = torch.eye(7, device=device, dtype=dtype).repeat((*energy.shape, 1, 1))
+        tm = jnp.eye(7, device=device, dtype=dtype).repeat((*energy.shape, 1, 1))
         tm[..., 0, 1] = self.length
         tm[..., 2, 3] = self.length
         tm[..., 4, 5] = self.length * igamma2
@@ -78,7 +74,7 @@ class Undulator(Element):
     def is_skippable(self) -> bool:
         return True
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         # TODO: Implement splitting for undulator properly, for now just return self
         return [self]
 

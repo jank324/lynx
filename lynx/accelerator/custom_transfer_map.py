@@ -1,10 +1,10 @@
 from typing import Optional, Union
 
+import jax
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from scipy import constants
 from scipy.constants import physical_constants
-from torch import Size, nn
 
 from lynx.particles import Beam
 from lynx.utils import UniqueNameGenerator
@@ -13,14 +13,10 @@ from .element import Element
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = torch.tensor(
-    constants.electron_mass
-    * constants.speed_of_light**2
-    / constants.elementary_charge  # electron mass
-)
-electron_mass_eV = torch.tensor(
-    physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
-)
+rest_energy = (
+    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
+)  # Electron mass
+electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class CustomTransferMap(Element):
@@ -30,23 +26,23 @@ class CustomTransferMap(Element):
 
     def __init__(
         self,
-        transfer_map: Union[torch.Tensor, nn.Parameter],
-        length: Optional[torch.Tensor] = None,
+        transfer_map: Union[jax.Array, nn.Parameter],
+        length: Optional[jax.Array] = None,
         name: Optional[str] = None,
         device=None,
-        dtype=torch.float32,
+        dtype=jnp.float32,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name)
 
-        assert isinstance(transfer_map, torch.Tensor)
+        assert isinstance(transfer_map, jax.Array)
         assert transfer_map.shape[-2:] == (7, 7)
 
-        self._transfer_map = torch.as_tensor(transfer_map, **factory_kwargs)
+        self._transfer_map = jnp.asarray(transfer_map, **factory_kwargs)
         self.length = (
-            torch.as_tensor(length, **factory_kwargs)
+            jnp.asarray(length, **factory_kwargs)
             if length is not None
-            else torch.zeros(transfer_map.shape[:-2], **factory_kwargs)
+            else jnp.zeros(transfer_map.shape[:-2], **factory_kwargs)
         )
 
     @classmethod
@@ -73,11 +69,11 @@ class CustomTransferMap(Element):
         device = elements[0].transfer_map(incoming_beam.energy).device
         dtype = elements[0].transfer_map(incoming_beam.energy).dtype
 
-        tm = torch.eye(7, device=device, dtype=dtype).repeat(
+        tm = jnp.eye(7, device=device, dtype=dtype).repeat(
             (*incoming_beam.energy.shape, 1, 1)
         )
         for element in elements:
-            tm = torch.matmul(element.transfer_map(incoming_beam.energy), tm)
+            tm = jnp.matmul(element.transfer_map(incoming_beam.energy), tm)
             incoming_beam = element.track(incoming_beam)
 
         combined_length = sum(element.length for element in elements)
@@ -88,7 +84,7 @@ class CustomTransferMap(Element):
             tm, length=combined_length, device=device, dtype=dtype, name=combined_name
         )
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jax.Array) -> jax.Array:
         return self._transfer_map
 
     def broadcast(self, shape: Size) -> Element:
@@ -112,7 +108,7 @@ class CustomTransferMap(Element):
     def defining_features(self) -> list[str]:
         return super().defining_features + ["transfer_map"]
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jax.Array) -> list[Element]:
         return [self]
 
     def plot(self, ax: plt.Axes, s: float) -> None:

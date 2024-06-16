@@ -1,4 +1,4 @@
-import torch
+import jax.numpy as jnp
 
 import lynx
 
@@ -14,12 +14,10 @@ def test_merged_transfer_maps_tracking():
 
     original_segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([0.6])),
-            lynx.Quadrupole(length=torch.tensor([0.2]), k1=torch.tensor([4.2])),
-            lynx.Drift(length=torch.tensor([0.4])),
-            lynx.HorizontalCorrector(
-                length=torch.tensor([0.1]), angle=torch.tensor([1e-4])
-            ),
+            lynx.Drift(length=jnp.array([0.6])),
+            lynx.Quadrupole(length=jnp.array([0.2]), k1=jnp.array([4.2])),
+            lynx.Drift(length=jnp.array([0.4])),
+            lynx.HorizontalCorrector(length=jnp.array([0.1]), angle=jnp.array([1e-4])),
         ]
     )
     merged_segment = original_segment.transfer_maps_merged(incoming_beam=incoming_beam)
@@ -27,18 +25,18 @@ def test_merged_transfer_maps_tracking():
     original_beam = original_segment.track(incoming_beam)
     merged_beam = merged_segment.track(incoming_beam)
 
-    assert torch.isclose(original_beam.mu_x, merged_beam.mu_x)
-    assert torch.isclose(original_beam.mu_xp, merged_beam.mu_xp)
-    assert torch.isclose(original_beam.mu_y, merged_beam.mu_y)
-    assert torch.isclose(original_beam.mu_yp, merged_beam.mu_yp)
-    assert torch.isclose(original_beam.sigma_x, merged_beam.sigma_x)
-    assert torch.isclose(original_beam.sigma_xp, merged_beam.sigma_xp)
-    assert torch.isclose(original_beam.sigma_y, merged_beam.sigma_y)
-    assert torch.isclose(original_beam.sigma_yp, merged_beam.sigma_yp)
-    assert torch.isclose(original_beam.sigma_s, merged_beam.sigma_s)
-    assert torch.isclose(original_beam.sigma_p, merged_beam.sigma_p)
-    assert torch.isclose(original_beam.energy, merged_beam.energy)
-    assert torch.isclose(original_beam.total_charge, merged_beam.total_charge)
+    assert jnp.isclose(original_beam.mu_x, merged_beam.mu_x)
+    assert jnp.isclose(original_beam.mu_xp, merged_beam.mu_xp)
+    assert jnp.isclose(original_beam.mu_y, merged_beam.mu_y)
+    assert jnp.isclose(original_beam.mu_yp, merged_beam.mu_yp)
+    assert jnp.isclose(original_beam.sigma_x, merged_beam.sigma_x)
+    assert jnp.isclose(original_beam.sigma_xp, merged_beam.sigma_xp)
+    assert jnp.isclose(original_beam.sigma_y, merged_beam.sigma_y)
+    assert jnp.isclose(original_beam.sigma_yp, merged_beam.sigma_yp)
+    assert jnp.isclose(original_beam.sigma_s, merged_beam.sigma_s)
+    assert jnp.isclose(original_beam.sigma_p, merged_beam.sigma_p)
+    assert jnp.isclose(original_beam.energy, merged_beam.energy)
+    assert jnp.isclose(original_beam.total_charge, merged_beam.total_charge)
 
 
 def test_merged_transfer_maps_tracking_vectorized():
@@ -52,12 +50,10 @@ def test_merged_transfer_maps_tracking_vectorized():
 
     original_segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([0.6])),
-            lynx.Quadrupole(length=torch.tensor([0.2]), k1=torch.tensor([4.2])),
-            lynx.Drift(length=torch.tensor([0.4])),
-            lynx.HorizontalCorrector(
-                length=torch.tensor([0.1]), angle=torch.tensor([1e-4])
-            ),
+            lynx.Drift(length=jnp.array([0.6])),
+            lynx.Quadrupole(length=jnp.array([0.2]), k1=jnp.array([4.2])),
+            lynx.Drift(length=jnp.array([0.4])),
+            lynx.HorizontalCorrector(length=jnp.array([0.1]), angle=jnp.array([1e-4])),
         ]
     ).broadcast((10,))
     merged_segment = original_segment.transfer_maps_merged(incoming_beam=incoming_beam)
@@ -65,18 +61,18 @@ def test_merged_transfer_maps_tracking_vectorized():
     original_beam = original_segment.track(incoming_beam)
     merged_beam = merged_segment.track(incoming_beam)
 
-    assert torch.allclose(original_beam.mu_x, merged_beam.mu_x)
-    assert torch.allclose(original_beam.mu_xp, merged_beam.mu_xp)
-    assert torch.allclose(original_beam.mu_y, merged_beam.mu_y)
-    assert torch.allclose(original_beam.mu_yp, merged_beam.mu_yp)
-    assert torch.allclose(original_beam.sigma_x, merged_beam.sigma_x)
-    assert torch.allclose(original_beam.sigma_xp, merged_beam.sigma_xp)
-    assert torch.allclose(original_beam.sigma_y, merged_beam.sigma_y)
-    assert torch.allclose(original_beam.sigma_yp, merged_beam.sigma_yp)
-    assert torch.allclose(original_beam.sigma_s, merged_beam.sigma_s)
-    assert torch.allclose(original_beam.sigma_p, merged_beam.sigma_p)
-    assert torch.allclose(original_beam.energy, merged_beam.energy)
-    assert torch.allclose(original_beam.total_charge, merged_beam.total_charge)
+    assert jnp.allclose(original_beam.mu_x, merged_beam.mu_x)
+    assert jnp.allclose(original_beam.mu_xp, merged_beam.mu_xp)
+    assert jnp.allclose(original_beam.mu_y, merged_beam.mu_y)
+    assert jnp.allclose(original_beam.mu_yp, merged_beam.mu_yp)
+    assert jnp.allclose(original_beam.sigma_x, merged_beam.sigma_x)
+    assert jnp.allclose(original_beam.sigma_xp, merged_beam.sigma_xp)
+    assert jnp.allclose(original_beam.sigma_y, merged_beam.sigma_y)
+    assert jnp.allclose(original_beam.sigma_yp, merged_beam.sigma_yp)
+    assert jnp.allclose(original_beam.sigma_s, merged_beam.sigma_s)
+    assert jnp.allclose(original_beam.sigma_p, merged_beam.sigma_p)
+    assert jnp.allclose(original_beam.energy, merged_beam.energy)
+    assert jnp.allclose(original_beam.total_charge, merged_beam.total_charge)
 
 
 def test_merged_transfer_maps_num_elements():
@@ -89,12 +85,10 @@ def test_merged_transfer_maps_num_elements():
 
     original_segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([0.6])),
-            lynx.Quadrupole(length=torch.tensor([0.2]), k1=torch.tensor([4.2])),
-            lynx.Drift(length=torch.tensor([0.4])),
-            lynx.HorizontalCorrector(
-                length=torch.tensor([0.1]), angle=torch.tensor([1e-4])
-            ),
+            lynx.Drift(length=jnp.array([0.6])),
+            lynx.Quadrupole(length=jnp.array([0.2]), k1=jnp.array([4.2])),
+            lynx.Drift(length=jnp.array([0.4])),
+            lynx.HorizontalCorrector(length=jnp.array([0.1]), angle=jnp.array([1e-4])),
         ]
     )
     merged_segment = original_segment.transfer_maps_merged(incoming_beam=incoming_beam)
@@ -109,13 +103,11 @@ def test_no_markers_left_after_removal():
     """
     segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([0.6])),
-            lynx.Quadrupole(length=torch.tensor([0.2]), k1=torch.tensor([4.2])),
+            lynx.Drift(length=jnp.array([0.6])),
+            lynx.Quadrupole(length=jnp.array([0.2]), k1=jnp.array([4.2])),
             lynx.Marker(),
-            lynx.Drift(length=torch.tensor([0.4])),
-            lynx.HorizontalCorrector(
-                length=torch.tensor([0.1]), angle=torch.tensor([1e-4])
-            ),
+            lynx.Drift(length=jnp.array([0.4])),
+            lynx.HorizontalCorrector(length=jnp.array([0.1]), angle=jnp.array([1e-4])),
             lynx.Marker(),
         ]
     )
@@ -132,9 +124,9 @@ def test_inactive_magnet_is_replaced_by_drift():
     """
     segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([0.6])),
-            lynx.Quadrupole(length=torch.tensor([0.2]), k1=torch.tensor([0.0])),
-            lynx.Drift(length=torch.tensor([0.4])),
+            lynx.Drift(length=jnp.array([0.6])),
+            lynx.Quadrupole(length=jnp.array([0.2]), k1=jnp.array([0.0])),
+            lynx.Drift(length=jnp.array([0.4])),
         ]
     )
 
@@ -151,9 +143,9 @@ def test_active_elements_not_replaced_by_drift():
     """
     segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([0.6])),
-            lynx.Quadrupole(length=torch.tensor([0.2]), k1=torch.tensor([4.2])),
-            lynx.Drift(length=torch.tensor([0.4])),
+            lynx.Drift(length=jnp.array([0.6])),
+            lynx.Quadrupole(length=jnp.array([0.2]), k1=jnp.array([4.2])),
+            lynx.Drift(length=jnp.array([0.4])),
         ]
     )
 
@@ -172,15 +164,13 @@ def test_skippable_elements_reset():
     )
     original_segment = lynx.Segment(
         elements=[
-            lynx.Drift(length=torch.tensor([0.6])),
-            lynx.Quadrupole(
-                length=torch.tensor([0.2]), k1=torch.tensor([4.2]), name="Q1"
-            ),
-            lynx.Drift(length=torch.tensor([0.4])),
+            lynx.Drift(length=jnp.array([0.6])),
+            lynx.Quadrupole(length=jnp.array([0.2]), k1=jnp.array([4.2]), name="Q1"),
+            lynx.Drift(length=jnp.array([0.4])),
             lynx.HorizontalCorrector(
-                length=torch.tensor([0.1]), angle=torch.tensor([1e-4]), name="HCOR_1"
+                length=jnp.array([0.1]), angle=jnp.array([1e-4]), name="HCOR_1"
             ),
-            lynx.Drift(length=torch.tensor([0.4])),
+            lynx.Drift(length=jnp.array([0.4])),
         ]
     )
 
@@ -191,4 +181,4 @@ def test_skippable_elements_reset():
     original_tm = original_segment.elements[2].transfer_map(energy=incoming_beam.energy)
     merged_tm = merged_segment.elements[2].transfer_map(energy=incoming_beam.energy)
 
-    assert torch.allclose(original_tm, merged_tm)
+    assert jnp.allclose(original_tm, merged_tm)
