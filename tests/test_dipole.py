@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 
-from lynx import Dipole, Drift, ParameterBeam, ParticleBeam, Segment
+from lynx import Dipole, Drift, ParticleBeam, Segment
 
 
 def test_dipole_off():
@@ -15,7 +15,7 @@ def test_dipole_off():
     outbeam_dipole_off = dipole(incoming_beam)
     outbeam_drift = drift(incoming_beam)
 
-    dipole.angle = torch.tensor([1.0], device=dipole.angle.device)
+    dipole.angle = jnp.array([1.0], device=dipole.angle.device)
     outbeam_dipole_on = dipole(incoming_beam)
 
     assert jnp.allclose(outbeam_dipole_off.sigma_x, outbeam_drift.sigma_x)
@@ -26,11 +26,9 @@ def test_dipole_batched_execution():
     """
     Test that a dipole with batch dimensions behaves as expected.
     """
-    batch_shape = torch.Size([3])
+    batch_shape = (3,)
     incoming = ParticleBeam.from_parameters(
-        num_particles=torch.tensor(1000000),
-        energy=jnp.array([1e9]),
-        mu_x=jnp.array([1e-5]),
+        num_particles=1_000_000, energy=jnp.array([1e9]), mu_x=jnp.array([1e-5])
     ).broadcast(batch_shape)
     segment = Segment(
         [

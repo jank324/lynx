@@ -355,7 +355,7 @@ class Segment(Element):
 
             return incoming
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         return self.__class__(
             elements=[element.broadcast(shape) for element in self.elements],
             name=self.name,
@@ -404,7 +404,7 @@ class Segment(Element):
             in the plot.
         """
         reference_segment = deepcopy(self)
-        splits = reference_segment.split(resolution=torch.tensor(resolution))
+        splits = reference_segment.split(resolution)
 
         split_lengths = [split.length[0] for split in splits]
         ss = [0] + [sum(split_lengths[: i + 1]) for i, _ in enumerate(split_lengths)]

@@ -35,10 +35,10 @@ class Quadrupole(Element):
 
     def __init__(
         self,
-        length: Union[jax.Array, nn.Parameter],
-        k1: Optional[Union[jax.Array, nn.Parameter]] = None,
-        misalignment: Optional[Union[jax.Array, nn.Parameter]] = None,
-        tilt: Optional[Union[jax.Array, nn.Parameter]] = None,
+        length: jax.Array,
+        k1: Optional[jax.Array] = None,
+        misalignment: Optional[jax.Array] = None,
+        tilt: Optional[jax.Array] = None,
         name: Optional[str] = None,
         device=None,
         dtype=jnp.float32,
@@ -79,7 +79,7 @@ class Quadrupole(Element):
             R = jnp.einsum("...ij,...jk,...kl->...il", R_exit, R, R_entry)
             return R
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         return self.__class__(
             length=self.length.repeat(shape),
             k1=self.k1.repeat(shape),

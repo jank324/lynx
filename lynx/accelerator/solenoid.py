@@ -36,9 +36,9 @@ class Solenoid(Element):
 
     def __init__(
         self,
-        length: Union[jax.Array, nn.Parameter] = None,
-        k: Optional[Union[jax.Array, nn.Parameter]] = None,
-        misalignment: Optional[Union[jax.Array, nn.Parameter]] = None,
+        length: jax.Array = None,
+        k: Optional[jax.Array] = None,
+        misalignment: Optional[jax.Array] = None,
         name: Optional[str] = None,
         device=None,
         dtype=jnp.float32,
@@ -104,7 +104,7 @@ class Solenoid(Element):
             R = jnp.einsum("...ij,...jk,...kl->...il", R_exit, R, R_entry)
             return R
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         return self.__class__(
             length=self.length.repeat(shape),
             k=self.k.repeat(shape),

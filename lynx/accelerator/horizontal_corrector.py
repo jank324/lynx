@@ -33,8 +33,8 @@ class HorizontalCorrector(Element):
 
     def __init__(
         self,
-        length: Union[jax.Array, nn.Parameter],
-        angle: Optional[Union[jax.Array, nn.Parameter]] = None,
+        length: jax.Array,
+        angle: Optional[jax.Array] = None,
         name: Optional[str] = None,
         device=None,
         dtype=jnp.float32,
@@ -66,7 +66,7 @@ class HorizontalCorrector(Element):
 
         return tm
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         return self.__class__(
             length=self.length.repeat(shape), angle=self.angle, name=self.name
         )

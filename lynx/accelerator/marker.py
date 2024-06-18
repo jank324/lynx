@@ -39,7 +39,7 @@ class Marker(Element):
         # Markers would be able to record the beam tracked through them.
         return incoming
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         new_marker = self.__class__(name=self.name)
         new_marker.length = self.length.repeat(shape)
         return new_marker

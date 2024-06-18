@@ -33,7 +33,7 @@ class Undulator(Element):
 
     def __init__(
         self,
-        length: Union[jax.Array, nn.Parameter],
+        length: jax.Array,
         is_active: bool = False,
         name: Optional[str] = None,
         device=None,
@@ -50,11 +50,7 @@ class Undulator(Element):
         dtype = self.length.dtype
 
         gamma = energy / rest_energy.to(device=device, dtype=dtype)
-        igamma2 = (
-            1 / gamma**2
-            if gamma != 0
-            else torch.tensor(0.0, device=device, dtype=dtype)
-        )
+        igamma2 = 1 / gamma**2 if gamma != 0 else 0.0
 
         tm = jnp.eye(7, device=device, dtype=dtype).repeat((*energy.shape, 1, 1))
         tm[..., 0, 1] = self.length
@@ -63,7 +59,7 @@ class Undulator(Element):
 
         return tm
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         return self.__class__(
             length=self.length.repeat(shape),
             is_active=self.is_active,

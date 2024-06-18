@@ -41,10 +41,10 @@ class Screen(Element):
 
     def __init__(
         self,
-        resolution: Optional[Union[jax.Array, nn.Parameter]] = None,
-        pixel_size: Optional[Union[jax.Array, nn.Parameter]] = None,
-        binning: Optional[Union[jax.Array, nn.Parameter]] = None,
-        misalignment: Optional[Union[jax.Array, nn.Parameter]] = None,
+        resolution: Optional[jax.Array] = None,
+        pixel_size: Optional[jax.Array] = None,
+        binning: Optional[jax.Array] = None,
+        misalignment: Optional[jax.Array] = None,
         is_active: bool = False,
         name: Optional[str] = None,
         device=None,
@@ -228,7 +228,7 @@ class Screen(Element):
         self._read_beam = [value]
         self.cached_reading = None
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         new_screen = self.__class__(
             resolution=self.resolution,
             pixel_size=self.pixel_size,

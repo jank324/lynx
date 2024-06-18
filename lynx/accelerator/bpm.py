@@ -57,7 +57,7 @@ class BPM(Element):
 
         return deepcopy(incoming)
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         new_bpm = self.__class__(is_active=self.is_active, name=self.name)
         new_bpm.length = self.length.repeat(shape)
         return new_bpm

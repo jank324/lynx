@@ -31,7 +31,7 @@ class Drift(Element):
 
     def __init__(
         self,
-        length: Union[jax.Array, nn.Parameter],
+        length: jax.Array,
         name: Optional[str] = None,
         device=None,
         dtype=jnp.float32,
@@ -61,7 +61,7 @@ class Drift(Element):
 
         return tm
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         return self.__class__(length=self.length.repeat(shape), name=self.name)
 
     @property

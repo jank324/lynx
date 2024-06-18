@@ -69,8 +69,8 @@ def base_rmatrix(
 
     kx2 = k1 + hx**2
     ky2 = -k1
-    kx = jnp.sqrt(jnp.complex(kx2, torch.tensor(0.0, device=device, dtype=dtype)))
-    ky = jnp.sqrt(jnp.complex(ky2, torch.tensor(0.0, device=device, dtype=dtype)))
+    kx = jnp.sqrt(jnp.complex(kx2, 0.0))
+    ky = jnp.sqrt(jnp.complex(ky2, 0.0))
     cx = jnp.cos(kx * length).real
     cy = jnp.cos(ky * length).real
     sy = jnp.clone(length)

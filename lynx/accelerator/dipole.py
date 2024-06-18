@@ -39,14 +39,14 @@ class Dipole(Element):
 
     def __init__(
         self,
-        length: Union[jax.Array, nn.Parameter],
-        angle: Optional[Union[jax.Array, nn.Parameter]] = None,
-        e1: Optional[Union[jax.Array, nn.Parameter]] = None,
-        e2: Optional[Union[jax.Array, nn.Parameter]] = None,
-        tilt: Optional[Union[jax.Array, nn.Parameter]] = None,
-        fringe_integral: Optional[Union[jax.Array, nn.Parameter]] = None,
-        fringe_integral_exit: Optional[Union[jax.Array, nn.Parameter]] = None,
-        gap: Optional[Union[jax.Array, nn.Parameter]] = None,
+        length: jax.Array,
+        angle: Optional[jax.Array] = None,
+        e1: Optional[jax.Array] = None,
+        e2: Optional[jax.Array] = None,
+        tilt: Optional[jax.Array] = None,
+        fringe_integral: Optional[jax.Array] = None,
+        fringe_integral_exit: Optional[jax.Array] = None,
+        gap: Optional[jax.Array] = None,
         name: Optional[str] = None,
         device=None,
         dtype=jnp.float32,
@@ -180,7 +180,7 @@ class Dipole(Element):
 
         return tm
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         return self.__class__(
             length=self.length.repeat(shape),
             angle=self.angle.repeat(shape),

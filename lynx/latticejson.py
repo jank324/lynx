@@ -1,24 +1,22 @@
 import json
 from typing import Any, Optional, Tuple
 
+import jax
+
 import lynx
 
 
 def feature2nontorch(value: Any) -> Any:
     """
-    if necesary, convert an the value of a feature of a `cheetah.Element` to a non-torch
-    type that can be saved to LatticeJSON.
+    If necesary, convert an the value of a feature of a `lynx.Element` to a non-JAX type
+    that can be saved to LatticeJSON.
 
     :param value: Value of the feature that might be in some kind of PyTorch format,
         such as `torch.Tensor` or `torch.nn.Parameter`.
     :return: Value of the feature if it is not in a PyTorch format, otherwise the
         value converted to a non-PyTorch format.
     """
-    return (
-        value.tolist()
-        if isinstance(value, (torch.Tensor, torch.nn.Parameter))
-        else value
-    )
+    return value.tolist() if isinstance(value, (jax.Array)) else value
 
 
 def convert_element(element: "lynx.Element"):

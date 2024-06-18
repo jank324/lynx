@@ -9,7 +9,7 @@ def test_create_from_parameters():
     Test that a `ParticleBeam` created from parameters actually has those parameters.
     """
     beam = ParticleBeam.from_parameters(
-        num_particles=torch.tensor([1_000_000]),
+        num_particles=1_000_000,
         mu_x=jnp.array([1e-5]),
         mu_xp=jnp.array([1e-7]),
         mu_y=jnp.array([2e-5]),
@@ -86,7 +86,7 @@ def test_from_twiss_to_twiss():
     parameters.
     """
     beam = ParticleBeam.from_twiss(
-        num_particles=torch.tensor([10_000_000]),
+        num_particles=10_000_000,
         beta_x=jnp.array([5.91253676811640894]),
         alpha_x=jnp.array([3.55631307633660354]),
         emittance_x=jnp.array([3.494768647122823e-09]),
@@ -115,14 +115,14 @@ def test_generate_uniform_ellipsoid_batched():
     radius_y = jnp.array([1e-4, 2e-4])
     radius_s = jnp.array([1e-5, 2e-5])
 
-    num_particles = torch.tensor(1_000_000)
+    num_particles = 1_000_000
     sigma_xp = jnp.array([2e-7, 1e-7])
     sigma_yp = jnp.array([3e-7, 2e-7])
     sigma_p = jnp.array([0.000001, 0.000002])
     energy = jnp.array([1e7, 2e7])
     total_charge = jnp.array([1e-9, 3e-9])
 
-    num_particles = torch.tensor(1_000_000)
+    num_particles = 1_000_000
     beam = ParticleBeam.uniform_3d_ellipsoid(
         num_particles=num_particles,
         radius_x=radius_x,

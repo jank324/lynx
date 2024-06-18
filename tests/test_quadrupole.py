@@ -49,7 +49,7 @@ def test_quadrupole_with_misalignments_multiple_batch_dimension():
     """
     Test that a quadrupole with misalignments with multiple batch dimension.
     """
-    batch_shape = torch.Size([4, 3])
+    batch_shape = (4, 3)
     quad_with_misalignment = Quadrupole(
         length=jnp.array([1.0]),
         k1=jnp.array([1.0]),
@@ -75,11 +75,9 @@ def test_quadrupole_with_misalignments_multiple_batch_dimension():
 
 
 def test_tilted_quadrupole_batch():
-    batch_shape = torch.Size([3])
+    batch_shape = (3,)
     incoming = ParticleBeam.from_parameters(
-        num_particles=torch.tensor(1000000),
-        energy=jnp.array([1e9]),
-        mu_x=jnp.array([1e-5]),
+        num_particles=1_000_000, energy=jnp.array([1e9]), mu_x=jnp.array([1e-5])
     ).broadcast(batch_shape)
     segment = Segment(
         [
@@ -101,11 +99,9 @@ def test_tilted_quadrupole_batch():
 
 
 def test_tilted_quadrupole_multiple_batch_dimension():
-    batch_shape = torch.Size([3, 2])
+    batch_shape = (3, 2)
     incoming = ParticleBeam.from_parameters(
-        num_particles=torch.tensor(10000),
-        energy=jnp.array([1e9]),
-        mu_x=jnp.array([1e-5]),
+        num_particles=10_000, energy=jnp.array([1e9]), mu_x=jnp.array([1e-5])
     ).broadcast(batch_shape)
     segment = Segment(
         [

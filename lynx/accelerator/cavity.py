@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 import jax
 import jax.numpy as jnp
@@ -33,10 +33,10 @@ class Cavity(Element):
 
     def __init__(
         self,
-        length: Union[jax.Array, nn.Parameter],
-        voltage: Optional[Union[jax.Array, nn.Parameter]] = None,
-        phase: Optional[Union[jax.Array, nn.Parameter]] = None,
-        frequency: Optional[Union[jax.Array, nn.Parameter]] = None,
+        length: jax.Array,
+        voltage: Optional[jax.Array] = None,
+        phase: Optional[jax.Array] = None,
+        frequency: Optional[jax.Array] = None,
         name: Optional[str] = None,
         device=None,
         dtype=jnp.float32,
@@ -98,9 +98,9 @@ class Cavity(Element):
         device = self.length.device
         dtype = self.length.dtype
 
-        beta0 = torch.full_like(self.length, 1.0)
-        igamma2 = torch.full_like(self.length, 0.0)
-        g0 = torch.full_like(self.length, 1e10)
+        beta0 = jnp.full_like(self.length, 1.0)
+        igamma2 = jnp.full_like(self.length, 0.0)
+        g0 = jnp.full_like(self.length, 1e10)
 
         mask = incoming.energy != 0
         g0[mask] = incoming.energy[mask] / electron_mass_eV.to(
@@ -122,8 +122,8 @@ class Cavity(Element):
         delta_energy = self.voltage * jnp.cos(phi)
 
         T566 = 1.5 * self.length * igamma2 / beta0**3
-        T556 = torch.full_like(self.length, 0.0)
-        T555 = torch.full_like(self.length, 0.0)
+        T556 = jnp.full_like(self.length, 0.0)
+        T555 = jnp.full_like(self.length, 0.0)
 
         if jnp.any(incoming.energy + delta_energy > 0):
             k = 2 * jnp.pi * self.frequency / constants.speed_of_light
@@ -253,7 +253,7 @@ class Cavity(Element):
         phi = jnp.deg2rad(self.phase)
         delta_energy = self.voltage * jnp.cos(phi)
         # Comment from Ocelot: Pure pi-standing-wave case
-        eta = torch.tensor(1.0, device=device, dtype=dtype)
+        eta = 1.0
         Ei = energy / electron_mass_eV
         Ef = (energy + delta_energy) / electron_mass_eV
         Ep = (Ef - Ei) / self.length  # Derivative of the energy
@@ -281,11 +281,11 @@ class Cavity(Element):
             * (jnp.cos(alpha) + jnp.sqrt(2 / eta) * jnp.cos(phi) * jnp.sin(alpha))
         )
 
-        r56 = torch.tensor(0.0)
-        beta0 = torch.tensor(1.0)
-        beta1 = torch.tensor(1.0)
+        r56 = 0.0
+        beta0 = 1.0
+        beta1 = 1.0
 
-        k = 2 * jnp.pi * self.frequency / torch.tensor(constants.speed_of_light)
+        k = 2 * jnp.pi * self.frequency / constants.speed_of_light
         r55_cor = 0.0
         if jnp.any((self.voltage != 0) & (energy != 0)):  # TODO: Do we need this if?
             beta0 = jnp.sqrt(1 - 1 / Ei**2)
@@ -324,7 +324,7 @@ class Cavity(Element):
 
         return R
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         return self.__class__(
             length=self.length.repeat(shape),
             voltage=self.voltage.repeat(shape),

@@ -33,8 +33,8 @@ class VerticalCorrector(Element):
 
     def __init__(
         self,
-        length: Union[jax.Array, nn.Parameter],
-        angle: Optional[Union[jax.Array, nn.Parameter]] = None,
+        length: jax.Array,
+        angle: Optional[jax.Array] = None,
         name: Optional[str] = None,
         device=None,
         dtype=jnp.float32,
@@ -54,7 +54,7 @@ class VerticalCorrector(Element):
         dtype = self.length.dtype
 
         gamma = energy / rest_energy.to(device=device, dtype=dtype)
-        igamma2 = torch.zeros_like(gamma)  # TODO: Effect on gradients?
+        igamma2 = jnp.zeros_like(gamma)  # TODO: Effect on gradients?
         igamma2[gamma != 0] = 1 / gamma[gamma != 0] ** 2
         beta = jnp.sqrt(1 - igamma2)
 
@@ -65,7 +65,7 @@ class VerticalCorrector(Element):
         tm[..., 4, 5] = -self.length / beta**2 * igamma2
         return tm
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         return self.__class__(
             length=self.length.repeat(shape), angle=self.angle, name=self.name
         )

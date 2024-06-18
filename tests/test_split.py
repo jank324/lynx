@@ -30,9 +30,7 @@ def test_quadrupole_end():
     the original quadrupole.
     """
     original_quadrupole = lynx.Quadrupole(length=jnp.array([0.2]), k1=jnp.array([4.2]))
-    split_quadrupole = lynx.Segment(
-        original_quadrupole.split(resolution=torch.tensor(0.01))
-    )
+    split_quadrupole = lynx.Segment(original_quadrupole.split(resolution=0.01))
 
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
@@ -55,7 +53,7 @@ def test_cavity_end():
         frequency=jnp.array([1.3e9]),
         phase=jnp.array([0.0]),
     )
-    split_cavity = lynx.Segment(original_cavity.split(resolution=torch.tensor(0.1)))
+    split_cavity = lynx.Segment(original_cavity.split(resolution=0.1))
 
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
@@ -73,9 +71,7 @@ def test_solenoid_end():
     the original solenoid.
     """
     original_solenoid = lynx.Solenoid(length=jnp.array([0.2]), k=jnp.array([4.2]))
-    split_solenoid = lynx.Segment(
-        original_solenoid.split(resolution=torch.tensor(0.01))
-    )
+    split_solenoid = lynx.Segment(original_solenoid.split(resolution=0.01))
 
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
@@ -93,7 +89,7 @@ def test_dipole_end():
     the original dipole.
     """
     original_dipole = lynx.Dipole(length=jnp.array([0.2]), angle=jnp.array([4.2]))
-    split_dipole = lynx.Segment(original_dipole.split(resolution=torch.tensor(0.01)))
+    split_dipole = lynx.Segment(original_dipole.split(resolution=0.01))
 
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
@@ -111,9 +107,7 @@ def test_undulator_end():
     the original undulator.
     """
     original_undulator = lynx.Undulator(length=jnp.array([3.142]))
-    split_undulator = lynx.Segment(
-        original_undulator.split(resolution=torch.tensor(0.1))
-    )
+    split_undulator = lynx.Segment(original_undulator.split(resolution=0.1))
 
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
@@ -135,7 +129,7 @@ def test_horizontal_corrector_end():
         length=jnp.array([0.2]), angle=jnp.array([4.2])
     )
     split_horizontal_corrector = lynx.Segment(
-        original_horizontal_corrector.split(resolution=torch.tensor(0.01))
+        original_horizontal_corrector.split(resolution=0.01)
     )
 
     incoming_beam = lynx.ParticleBeam.from_astra(
@@ -158,7 +152,7 @@ def test_vertical_corrector_end():
         length=jnp.array([0.2]), angle=jnp.array([4.2])
     )
     split_vertical_corrector = lynx.Segment(
-        original_vertical_corrector.split(resolution=torch.tensor(0.01))
+        original_vertical_corrector.split(resolution=0.01)
     )
 
     incoming_beam = lynx.ParticleBeam.from_astra(

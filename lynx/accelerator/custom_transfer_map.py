@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 import jax
 import jax.numpy as jnp
@@ -26,7 +26,7 @@ class CustomTransferMap(Element):
 
     def __init__(
         self,
-        transfer_map: Union[jax.Array, nn.Parameter],
+        transfer_map: jax.Array,
         length: Optional[jax.Array] = None,
         name: Optional[str] = None,
         device=None,
@@ -87,7 +87,7 @@ class CustomTransferMap(Element):
     def transfer_map(self, energy: jax.Array) -> jax.Array:
         return self._transfer_map
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         return self.__class__(
             self._transfer_map.repeat((*shape, 1, 1)),
             length=self.length.repeat(shape),

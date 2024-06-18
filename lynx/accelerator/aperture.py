@@ -34,8 +34,8 @@ class Aperture(Element):
 
     def __init__(
         self,
-        x_max: Optional[Union[jax.Array, nn.Parameter]] = None,
-        y_max: Optional[Union[jax.Array, nn.Parameter]] = None,
+        x_max: Optional[jax.Array] = None,
+        y_max: Optional[jax.Array] = None,
         shape: Literal["rectangular", "elliptical"] = "rectangular",
         is_active: bool = True,
         name: Optional[str] = None,
@@ -108,7 +108,7 @@ class Aperture(Element):
             else ParticleBeam.empty
         )
 
-    def broadcast(self, shape: Size) -> Element:
+    def broadcast(self, shape: tuple) -> Element:
         new_aperture = self.__class__(
             x_max=self.x_max.repeat(shape),
             y_max=self.y_max.repeat(shape),

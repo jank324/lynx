@@ -83,7 +83,7 @@ def test_reading_shows_beam_ares():
         device=segment.AREABSCR1.pixel_size.device,
         dtype=segment.AREABSCR1.pixel_size.dtype,
     )
-    segment.AREABSCR1.binning = torch.tensor(1, device=segment.AREABSCR1.binning.device)
+    segment.AREABSCR1.binning = 1
     segment.AREABSCR1.is_active = True
 
     assert isinstance(segment.AREABSCR1.reading, jax.Array)

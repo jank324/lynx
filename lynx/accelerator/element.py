@@ -97,7 +97,7 @@ class Element(ABC, eqx.Module):
         """Forward function required by `torch.nn.Module`. Simply calls `track`."""
         return self.track(incoming)
 
-    def broadcast(self, shape: torch.Size) -> "Element":
+    def broadcast(self, shape: tuple) -> "Element":
         """Broadcast the element to higher batch dimensions."""
         raise NotImplementedError
 

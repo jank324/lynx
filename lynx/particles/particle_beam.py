@@ -110,16 +110,14 @@ class ParticleBeam(Beam):
             ]
             if argument is not None
         ]
-        shape = not_nones[0].shape if len(not_nones) > 0 else torch.Size([1])
+        shape = not_nones[0].shape if len(not_nones) > 0 else (1,)
         if len(not_nones) > 1:
             assert all(
                 argument.shape == shape for argument in not_nones
             ), "Arguments must have the same shape."
 
         # Set default values without function call in function signature
-        num_particles = (
-            num_particles if num_particles is not None else torch.tensor(100_000)
-        )
+        num_particles = num_particles if num_particles is not None else 100_000
         mu_x = mu_x if mu_x is not None else jnp.full(shape, 0.0)
         mu_xp = mu_xp if mu_xp is not None else jnp.full(shape, 0.0)
         mu_y = mu_y if mu_y is not None else jnp.full(shape, 0.0)
@@ -144,8 +142,7 @@ class ParticleBeam(Beam):
         )
 
         mean = jnp.stack(
-            [mu_x, mu_xp, mu_y, mu_yp, jnp.full(shape, 0.0), jnp.full(shape, 0.0)],
-            dim=-1,
+            [mu_x, mu_xp, mu_y, mu_yp, jnp.zeros(shape), jnp.zeros(shape)], dim=-1
         )
 
         cov = jnp.zeros(*shape, 6, 6)
@@ -216,16 +213,14 @@ class ParticleBeam(Beam):
             ]
             if argument is not None
         ]
-        shape = not_nones[0].shape if len(not_nones) > 0 else torch.Size([1])
+        shape = not_nones[0].shape if len(not_nones) > 0 else (1,)
         if len(not_nones) > 1:
             assert all(
                 argument.shape == shape for argument in not_nones
             ), "Arguments must have the same shape."
 
         # Set default values without function call in function signature
-        num_particles = (
-            num_particles if num_particles is not None else torch.tensor(1_000_000)
-        )
+        num_particles = num_particles if num_particles is not None else 1_000_000
         beta_x = beta_x if beta_x is not None else jnp.full(shape, 0.0)
         alpha_x = alpha_x if alpha_x is not None else jnp.full(shape, 0.0)
         emittance_x = emittance_x if emittance_x is not None else jnp.full(shape, 0.0)
@@ -326,7 +321,7 @@ class ParticleBeam(Beam):
             ]
             if argument is not None
         ]
-        shape = not_nones[0].shape if len(not_nones) > 0 else torch.Size([1])
+        shape = not_nones[0].shape if len(not_nones) > 0 else (1,)
         if len(not_nones) > 1:
             assert all(
                 argument.shape == shape for argument in not_nones
@@ -335,9 +330,7 @@ class ParticleBeam(Beam):
         # Set default values without function call in function signature
         # NOTE that this does not need to be done for values that are passed to the
         # Gaussian beam generation.
-        num_particles = (
-            num_particles if num_particles is not None else torch.tensor(1_000_000)
-        )
+        num_particles = num_particles if num_particles is not None else 1_000_000
         radius_x = radius_x if radius_x is not None else jnp.full(shape, 1e-3)
         radius_y = radius_y if radius_y is not None else jnp.full(shape, 1e-3)
         radius_s = radius_s if radius_s is not None else jnp.full(shape, 1e-3)
@@ -447,14 +440,14 @@ class ParticleBeam(Beam):
             ]
             if argument is not None
         ]
-        shape = not_nones[0].shape if len(not_nones) > 0 else torch.Size([1])
+        shape = not_nones[0].shape if len(not_nones) > 0 else (1,)
         if len(not_nones) > 1:
             assert all(
                 argument.shape == shape for argument in not_nones
             ), "Arguments must have the same shape."
 
         # Set default values without function call in function signature
-        num_particles = num_particles if num_particles is not None else torch.tensor(10)
+        num_particles = num_particles if num_particles is not None else 10
         mu_x = mu_x if mu_x is not None else jnp.full(shape, 0.0)
         mu_xp = mu_xp if mu_xp is not None else jnp.full(shape, 0.0)
         mu_y = mu_y if mu_y is not None else jnp.full(shape, 0.0)
@@ -842,7 +835,7 @@ class ParticleBeam(Beam):
             dim=1,
         )
 
-    def broadcast(self, shape: torch.Size) -> "ParticleBeam":
+    def broadcast(self, shape: tuple) -> "ParticleBeam":
         return self.__class__(
             particles=self.particles.repeat((*shape, 1, 1)),
             energy=self.energy.repeat(shape),

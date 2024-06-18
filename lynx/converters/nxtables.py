@@ -65,49 +65,49 @@ def translate_element(row: list[str], header: list[str]) -> Optional[Dict]:
             name=name,
             resolution=jnp.array([2464, 2056]),
             pixel_size=jnp.array([0.00343e-3, 0.00247e-3]),
-            binning=torch.tensor(1),
+            binning=1,
         )
     elif class_name == "BSCR":
         element = lynx.Screen(
             name=name,
             resolution=jnp.array([2448, 2040]),
             pixel_size=jnp.array([3.5488e-6, 2.5003e-6]),
-            binning=torch.tensor(1),
+            binning=1,
         )
     elif class_name == "BSCM":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
             resolution=jnp.array([2448, 2040]),
             pixel_size=jnp.array([3.5488e-6, 2.5003e-6]),
-            binning=torch.tensor(1),
+            binning=1,
         )
     elif class_name == "BSCO":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
             resolution=jnp.array([2448, 2040]),
             pixel_size=jnp.array([3.5488e-6, 2.5003e-6]),
-            binning=torch.tensor(1),
+            binning=1,
         )
     elif class_name == "BSCA":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
             resolution=jnp.array([2448, 2040]),
             pixel_size=jnp.array([3.5488e-6, 2.5003e-6]),
-            binning=torch.tensor(1),
+            binning=1,
         )
     elif class_name == "BSCE":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
             resolution=jnp.array([2464, 2056]),
             pixel_size=jnp.array([0.00998e-3, 0.00715e-3]),
-            binning=torch.tensor(1),
+            binning=1,
         )
     elif class_name == "SCRD":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
             resolution=jnp.array([2464, 2056]),
             pixel_size=jnp.array([0.00998e-3, 0.00715e-3]),
-            binning=torch.tensor(1),
+            binning=1,
         )
     elif class_name == "BPMG":
         element = lynx.BPM(name=name)
@@ -116,22 +116,22 @@ def translate_element(row: list[str], header: list[str]) -> Optional[Dict]:
     elif class_name == "SLHG":
         element = lynx.Aperture(  # TODO: Ask for actual size and shape
             name=name,
-            x_max=torch.tensor([float("inf")]),
-            y_max=torch.tensor([float("inf")]),
+            x_max=jnp.array([jnp.inf]),
+            y_max=jnp.array([jnp.inf]),
             shape="elliptical",
         )
     elif class_name == "SLHB":
         element = lynx.Aperture(  # TODO: Ask for actual size and shape
             name=name,
-            x_max=torch.tensor([float("inf")]),
-            y_max=torch.tensor([float("inf")]),
+            x_max=jnp.array([jnp.inf]),
+            y_max=jnp.array([jnp.inf]),
             shape="rectangular",
         )
     elif class_name == "SLHS":
         element = lynx.Aperture(  # TODO: Ask for actual size and shape
             name=name,
-            x_max=torch.tensor([float("inf")]),
-            y_max=torch.tensor([float("inf")]),
+            x_max=jnp.array([jnp.inf]),
+            y_max=jnp.array([jnp.inf]),
             shape="rectangular",
         )
     elif class_name == "MCHM":

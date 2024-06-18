@@ -14,9 +14,7 @@ def test_simple_quadrupole():
         [
             lynx.Drift(length=jnp.array([1.0])),
             lynx.Quadrupole(
-                length=jnp.array([0.2]),
-                k1=nn.Parameter(torch.tensor([3.142])),
-                name="my_quad",
+                length=jnp.array([0.2]), k1=jnp.Array([3.142]), name="my_quad"
             ),
             lynx.Drift(length=jnp.array([1.0])),
         ]

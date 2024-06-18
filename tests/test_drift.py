@@ -27,9 +27,7 @@ def test_diverging_particle_beam():
     """
     drift = lynx.Drift(length=jnp.array([1.0]))
     incoming_beam = lynx.ParticleBeam.from_parameters(
-        num_particles=torch.tensor(1000),
-        sigma_xp=jnp.array([2e-7]),
-        sigma_yp=jnp.array([2e-7]),
+        num_particles=1_000, sigma_xp=jnp.array([2e-7]), sigma_yp=jnp.array([2e-7])
     )
     outgoing_beam = drift.track(incoming_beam)
 
