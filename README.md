@@ -10,34 +10,39 @@
 
 # Lynx
 
+**🚧 This repository is currently under construction. Do not expect this code to work yet. I recommend using _Cheetah_ for now. 🚧**
+
 Lynx is a JAX port of [Cheetah](https://github.com/desy-ml/cheetah).
 Cheetah is a particle tracking accelerator we built specifically to speed up the training of reinforcement learning models.
 
 ## Installation
 
-Simply install _Cheetah_ from PyPI by running the following command.
+Simply install _Lynx_ from PyPI by running the following command.
 
 ```bash
-pip install cheetah-accelerator
+pip install lynx-accelerator
 ```
 
 ## How To Use
 
-A sequence of accelerator elements (or a lattice) is called a `Segment` in _Cheetah_. You can create a `Segment` as follows
+A sequence of accelerator elements (or a lattice) is called a `Segment` in _Lynx_. You can create a `Segment` as follows
 
 ```python
+import jax.numpy as jnp
+from lynx import BPM, Drift, HorizontalCorrector, Segment, VerticalCorrector
+
 segment = Segment(
     elements=[
         BPM(name="BPM1SMATCH"),
-        Drift(length=torch.tensor([1.0])),
+        Drift(length=jnp.array([1.0])),
         BPM(name="BPM6SMATCH"),
-        Drift(length=torch.tensor([1.0])),
-        VerticalCorrector(length=torch.tensor([0.3]), name="V7SMATCH"),
-        Drift(length=torch.tensor([0.2])),
-        HorizontalCorrector(length=torch.tensor([0.3]), name="H10SMATCH"),
-        Drift(length=torch.tensor([7.0])),
-        HorizontalCorrector(length=torch.tensor([0.3]), name="H12SMATCH"),
-        Drift(length=torch.tensor([0.05])),
+        Drift(length=jnp.array([1.0])),
+        VerticalCorrector(length=jnp.array([0.3]), name="V7SMATCH"),
+        Drift(length=jnp.array([0.2])),
+        HorizontalCorrector(length=jnp.array([0.3]), name="H10SMATCH"),
+        Drift(length=jnp.array([7.0])),
+        HorizontalCorrector(length=jnp.array([0.3]), name="H12SMATCH"),
+        Drift(length=jnp.array([0.05])),
         BPM(name="BPM13SMATCH"),
     ]
 )
@@ -52,7 +57,7 @@ segment = Segment.from_ocelot(cell)
 All elements can be accesses as a property of the segment via their name. The strength of a quadrupole named _AREAMQZM2_ for example, may be set by running
 
 ```python
-segment.AREAMQZM2.k1 = torch.tensor(4.2)
+segment.AREAMQZM2.k1 = jnp.array([4.2])
 ```
 
 In order to track a beam through the segment, simply call the segment like so
@@ -61,7 +66,7 @@ In order to track a beam through the segment, simply call the segment like so
 outgoing_beam = segment.track(incoming_beam)
 ```
 
-You can choose to track either a beam defined by its parameters (fast) or by its particles (precise). _Cheetah_ defines two different beam classes for this purpose and beams may be created by
+You can choose to track either a beam defined by its parameters (fast) or by its particles (precise). _Lynx_ defines two different beam classes for this purpose and beams may be created by
 
 ```python
 beam1 = ParameterBeam.from_parameters()
@@ -83,11 +88,11 @@ segment.plot_overview(beam=beam)
 
 ![Overview Plot](images/misalignment.png)
 
-where the optional keyword argument `beam` is the incoming beam represented by the reference particles. Cheetah will use a default incoming beam, if no beam is passed.
+where the optional keyword argument `beam` is the incoming beam represented by the reference particles. Lynx will use a default incoming beam, if no beam is passed.
 
-## Cite Cheetah
+## Cite Lynx
 
-If you use Cheetah, please cite the following two papers:
+If you use Lynx, please cite the following two papers:
 
 ```bibtex
 @article{kaiser2024cheetah,
@@ -116,7 +121,7 @@ If you use Cheetah, please cite the following two papers:
 
 Activate your virtual environment. (Optional)
 
-Install the cheetah package as editable
+Install the Lynx package as editable
 
 ```sh
 pip install -e .
@@ -131,7 +136,7 @@ pre-commit install
 
 ## Acknowledgements
 
-We acknowledge the contributions of the following people to the development of Cheetah: Jan Kaiser, Chenran Xu, Oliver Stein, Annika Eichler, Andrea Santamaria Garcia and others.
+We acknowledge the contributions of the following people to the development of Lynx and Cheetah: Jan Kaiser, Chenran Xu, Oliver Stein, Annika Eichler, Andrea Santamaria Garcia and others.
 
-The work to develop Cheetah has in part been funded by the IVF project InternLabs-0011 (HIR3X) and the Initiative and Networking Fund by the Helmholtz Association (Autonomous Accelerator, ZT-I-PF-5-6).
+The work to develop Lynx and Cheetah has in part been funded by the IVF project InternLabs-0011 (HIR3X) and the Initiative and Networking Fund by the Helmholtz Association (Autonomous Accelerator, ZT-I-PF-5-6).
 In addition, we acknowledge support from DESY (Hamburg, Germany) and KIT (Karlsruhe, Germany), members of the Helmholtz Association HGF.
