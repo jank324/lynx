@@ -1,22 +1,21 @@
-from typing import Optional, Union
+from typing import Optional
 
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import numpy as np
+import torch
 from matplotlib.patches import Rectangle
-from scipy import constants
 from scipy.constants import physical_constants
 
-from lynx.utils import UniqueNameGenerator
-
-from .element import Element
+from cheetah.accelerator.element import Element
+from cheetah.utils import (
+    UniqueNameGenerator,
+    compute_relativistic_factors,
+    verify_device_and_dtype,
+)
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = (
-    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
-)  # Electron mass
 electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
@@ -33,42 +32,39 @@ class VerticalCorrector(Element):
 
     def __init__(
         self,
-        length: jax.Array,
-        angle: Optional[jax.Array] = None,
+        length: torch.Tensor,
+        angle: Optional[torch.Tensor] = None,
         name: Optional[str] = None,
         device=None,
-        dtype=jnp.float32,
+        dtype=None,
     ) -> None:
+        device, dtype = verify_device_and_dtype([length, angle], device, dtype)
         factory_kwargs = {"device": device, "dtype": dtype}
-        super().__init__(name=name)
+        super().__init__(name=name, **factory_kwargs)
 
-        self.length = jnp.asarray(length, **factory_kwargs)
-        self.angle = (
-            jnp.asarray(angle, **factory_kwargs)
-            if angle is not None
-            else jnp.zeros_like(self.length)
-        )
+        self.register_buffer("angle", torch.tensor(0.0, **factory_kwargs))
+
+        self.length = torch.as_tensor(length, **factory_kwargs)
+        if angle is not None:
+            self.angle = torch.as_tensor(angle, **factory_kwargs)
 
     def transfer_map(self, energy: jax.Array) -> jax.Array:
         device = self.length.device
         dtype = self.length.dtype
 
-        gamma = energy / rest_energy.to(device=device, dtype=dtype)
-        igamma2 = jnp.zeros_like(gamma)  # TODO: Effect on gradients?
-        igamma2[gamma != 0] = 1 / gamma[gamma != 0] ** 2
-        beta = jnp.sqrt(1 - igamma2)
+        _, igamma2, beta = compute_relativistic_factors(energy)
 
-        tm = jnp.eye(7, device=device, dtype=dtype).repeat((*self.length.shape, 1, 1))
+        vector_shape = torch.broadcast_shapes(
+            self.length.shape, igamma2.shape, self.angle.shape
+        )
+
+        tm = torch.eye(7, device=device, dtype=dtype).repeat((*vector_shape, 1, 1))
         tm[..., 0, 1] = self.length
         tm[..., 2, 3] = self.length
         tm[..., 3, 6] = self.angle
         tm[..., 4, 5] = -self.length / beta**2 * igamma2
-        return tm
 
-    def broadcast(self, shape: tuple) -> Element:
-        return self.__class__(
-            length=self.length.repeat(shape), angle=self.angle, name=self.name
-        )
+        return tm
 
     @property
     def is_skippable(self) -> bool:
@@ -76,24 +72,30 @@ class VerticalCorrector(Element):
 
     @property
     def is_active(self) -> bool:
-        return any(self.angle != 0)
+        return torch.any(self.angle != 0)
 
-    def split(self, resolution: jax.Array) -> list[Element]:
-        split_elements = []
-        remaining = self.length
-        while remaining > 0:
-            length = jnp.min(resolution, remaining)
-            element = VerticalCorrector(length, self.angle * length / self.length)
-            split_elements.append(element)
-            remaining -= resolution
-        return split_elements
+    def split(self, resolution: torch.Tensor) -> list[Element]:
+        num_splits = torch.ceil(torch.max(self.length) / resolution).int()
+        return [
+            VerticalCorrector(
+                self.length / num_splits,
+                self.angle / num_splits,
+                dtype=self.length.dtype,
+                device=self.length.device,
+            )
+            for _ in range(num_splits)
+        ]
 
-    def plot(self, ax: plt.Axes, s: float) -> None:
+    def plot(self, ax: plt.Axes, s: float, vector_idx: Optional[tuple] = None) -> None:
+        plot_s = s[vector_idx] if s.dim() > 0 else s
+        plot_length = self.length[vector_idx] if self.length.dim() > 0 else self.length
+        plot_angle = self.angle[vector_idx] if self.angle.dim() > 0 else self.angle
+
         alpha = 1 if self.is_active else 0.2
-        height = 0.8 * (np.sign(self.angle[0]) if self.is_active else 1)
+        height = 0.8 * (torch.sign(plot_angle) if self.is_active else 1)
 
         patch = Rectangle(
-            (s, 0), self.length[0], height, color="tab:cyan", alpha=alpha, zorder=2
+            (plot_s, 0), plot_length, height, color="tab:cyan", alpha=alpha, zorder=2
         )
         ax.add_patch(patch)
 

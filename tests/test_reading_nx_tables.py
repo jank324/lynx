@@ -1,4 +1,6 @@
-import lynx
+import torch
+
+import cheetah
 
 
 def test_no_error():
@@ -22,4 +24,4 @@ def test_length():
     """
     segment = lynx.Segment.from_nx_tables("tests/resources/Stage4v3_9.txt")
 
-    assert segment.length == 44.2215
+    assert torch.allclose(segment.length, torch.tensor(44.2215))

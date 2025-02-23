@@ -1,23 +1,18 @@
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from typing import Optional
 
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-from scipy import constants
-from scipy.constants import physical_constants
+import torch
+from torch import nn
 
 from lynx.particles import Beam, ParameterBeam, ParticleBeam
 from lynx.utils import UniqueNameGenerator
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
-
-rest_energy = (
-    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
-)  # Electron mass
-
-electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Element(ABC, eqx.Module):
@@ -27,31 +22,34 @@ class Element(ABC, eqx.Module):
     :param name: Unique identifier of the element.
     """
 
-    length: jax.Array = jnp.zeros((1))
-
-    def __init__(self, name: Optional[str] = None) -> None:
+    def __init__(self, name: Optional[str] = None, device=None, dtype=None) -> None:
         super().__init__()
 
         self.name = name if name is not None else generate_unique_name()
+        self.register_buffer("length", torch.tensor(0.0, device=device, dtype=dtype))
 
     def transfer_map(self, energy: jax.Array) -> jax.Array:
         r"""
         Generates the element's transfer map that describes how the beam and its
         particles are transformed when traveling through the element.
-        The state vector consists of 6 values with a physical meaning:
-        (in the trace space notation)
+        The state vector consists of 6 values with a physical meaning.
+        They represent a particle in the phase space with
 
-        - x: Position in x direction
-        - xp: Angle in x direction
-        - y: Position in y direction
-        - yp: Angle in y direction
-        - s: Position in longitudinal direction, the zero value is set to the
+        - x: Position in x direction (m) relative to the reference particle
+        - px: Horinzontal momentum normalized over the reference momentum
+            (dimensionless) :math:`px = P_x / P_0`
+        - y: Position in y direction (m) relative to the reference particle
+        - py: Vertical momentum normalized over the reference momentum
+            (dimensionless) :math:`py = P_y / P_0`
+        - tau: Position in longitudinal direction (m) with the zero value set to the
         reference position (usually the center of the pulse)
-        - p: Relative energy deviation from the reference particle
-           :math:`p = \frac{\Delta E}{p_0 C}`
-        As well as a seventh value used to add constants to some of the prior values if
-        necessary. Through this seventh state, the addition of constants can be
-        represented using a matrix multiplication.
+        - p: Relative energy deviation from the reference particle (dimensionless)
+        :math:`p = \frac{\Delta E}{p_0 C}`
+
+        As well as a seventh value used to add constants to some of the previous values
+        if necessary. Through this seventh state, the addition of constants can be
+        represented using a matrix multiplication, i.e. the augmented matrix as in an
+        affine transformation.
 
         :param energy: Reference energy of the Beam. Read from the fed-in Cheetah Beam.
         :return: A 7x7 Matrix for further calculations.
@@ -66,9 +64,7 @@ class Element(ABC, eqx.Module):
         :param incoming: Beam of particles entering the element.
         :return: Beam of particles exiting the element.
         """
-        if incoming is Beam.empty:
-            return incoming
-        elif isinstance(incoming, ParameterBeam):
+        if isinstance(incoming, ParameterBeam):
             tm = self.transfer_map(incoming.energy)
             mu = jnp.matmul(tm, incoming._mu.unsqueeze(-1)).squeeze(-1)
             cov = jnp.matmul(tm, jnp.matmul(incoming._cov, tm.transpose(-2, -1)))
@@ -87,6 +83,7 @@ class Element(ABC, eqx.Module):
                 new_particles,
                 incoming.energy,
                 particle_charges=incoming.particle_charges,
+                survival_probabilities=incoming.survival_probabilities,
                 device=new_particles.device,
                 dtype=new_particles.dtype,
             )
@@ -96,10 +93,6 @@ class Element(ABC, eqx.Module):
     def forward(self, incoming: Beam) -> Beam:
         """Forward function required by `torch.nn.Module`. Simply calls `track`."""
         return self.track(incoming)
-
-    def broadcast(self, shape: tuple) -> "Element":
-        """Broadcast the element to higher batch dimensions."""
-        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -121,7 +114,20 @@ class Element(ABC, eqx.Module):
         NOTE: When overriding this property, make sure to call the super method and
         extend the list it returns.
         """
-        return []
+        return ["name"]
+
+    def clone(self) -> "Element":
+        """Create a copy of the element which does not share the underlying memory."""
+        return self.__class__(
+            **{
+                feature: (
+                    getattr(self, feature).clone()
+                    if isinstance(getattr(self, feature), torch.Tensor)
+                    else deepcopy(getattr(self, feature))
+                )
+                for feature in self.defining_features
+            }
+        )
 
     @abstractmethod
     def split(self, resolution: jax.Array) -> list["Element"]:
@@ -136,12 +142,16 @@ class Element(ABC, eqx.Module):
         raise NotImplementedError
 
     @abstractmethod
-    def plot(self, ax: plt.Axes, s: float) -> None:
+    def plot(self, ax: plt.Axes, s: float, vector_idx: Optional[tuple] = None) -> None:
         """
         Plot a representation of this element into a `matplotlib` Axes at position `s`.
 
         :param ax: Axes to plot the representation into.
         :param s: Position of the object along s in meters.
+        :param vector_idx: Index of the vector dimension to plot. If the model has more
+            than one vector dimension, this can be used to select a specific one. In the
+            case of present vector dimension but no index provided, the first one is
+            used by default.
         """
         raise NotImplementedError
 

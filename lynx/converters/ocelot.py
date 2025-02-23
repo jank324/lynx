@@ -4,9 +4,9 @@ import jax.numpy as jnp
 import lynx
 
 
-def ocelot2cheetah(
-    element, warnings: bool = True, device=None, dtype=jnp.float32
-) -> "lynx.Element":
+def convert_element_to_cheetah(
+    element, warnings: bool = True, device=None, dtype=torch.float32
+) -> "cheetah.Element":
     """
     Translate an Ocelot element to a Cheetah element.
 
@@ -31,103 +31,103 @@ def ocelot2cheetah(
         )
 
     if isinstance(element, ocelot.Drift):
-        return lynx.Drift(
-            length=jnp.array([element.l], dtype=jnp.float32),
+        return cheetah.Drift(
+            length=torch.tensor(element.l, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,
         )
     elif isinstance(element, ocelot.Quadrupole):
-        return lynx.Quadrupole(
-            length=jnp.array([element.l], dtype=jnp.float32),
-            k1=jnp.array([element.k1], dtype=jnp.float32),
+        return cheetah.Quadrupole(
+            length=torch.tensor(element.l, dtype=torch.float32),
+            k1=torch.tensor(element.k1, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,
         )
     elif isinstance(element, ocelot.Solenoid):
-        return lynx.Solenoid(
-            length=jnp.array([element.l], dtype=jnp.float32),
-            k=jnp.array([element.k], dtype=jnp.float32),
+        return cheetah.Solenoid(
+            length=torch.tensor(element.l, dtype=torch.float32),
+            k=torch.tensor(element.k, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,
         )
     elif isinstance(element, ocelot.Hcor):
-        return lynx.HorizontalCorrector(
-            length=jnp.array([element.l], dtype=jnp.float32),
-            angle=jnp.array([element.angle], dtype=jnp.float32),
+        return cheetah.HorizontalCorrector(
+            length=torch.tensor(element.l, dtype=torch.float32),
+            angle=torch.tensor(element.angle, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,
         )
     elif isinstance(element, ocelot.Vcor):
-        return lynx.VerticalCorrector(
-            length=jnp.array([element.l], dtype=jnp.float32),
-            angle=jnp.array([element.angle], dtype=jnp.float32),
+        return cheetah.VerticalCorrector(
+            length=torch.tensor(element.l, dtype=torch.float32),
+            angle=torch.tensor(element.angle, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,
         )
     elif isinstance(element, ocelot.Bend):
-        return lynx.Dipole(
-            length=jnp.array([element.l], dtype=jnp.float32),
-            angle=jnp.array([element.angle], dtype=jnp.float32),
-            e1=jnp.array([element.e1], dtype=jnp.float32),
-            e2=jnp.array([element.e2], dtype=jnp.float32),
-            tilt=jnp.array([element.tilt], dtype=jnp.float32),
-            fringe_integral=jnp.array([element.fint], dtype=jnp.float32),
-            fringe_integral_exit=jnp.array([element.fintx], dtype=jnp.float32),
-            gap=jnp.array([element.gap], dtype=jnp.float32),
+        return cheetah.Dipole(
+            length=torch.tensor(element.l, dtype=torch.float32),
+            angle=torch.tensor(element.angle, dtype=torch.float32),
+            dipole_e1=torch.tensor(element.e1, dtype=torch.float32),
+            dipole_e2=torch.tensor(element.e2, dtype=torch.float32),
+            tilt=torch.tensor(element.tilt, dtype=torch.float32),
+            fringe_integral=torch.tensor(element.fint, dtype=torch.float32),
+            fringe_integral_exit=torch.tensor(element.fintx, dtype=torch.float32),
+            gap=torch.tensor(element.gap, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,
         )
     elif isinstance(element, ocelot.SBend):
-        return lynx.Dipole(
-            length=jnp.array([element.l], dtype=jnp.float32),
-            angle=jnp.array([element.angle], dtype=jnp.float32),
-            e1=jnp.array([element.e1], dtype=jnp.float32),
-            e2=jnp.array([element.e2], dtype=jnp.float32),
-            tilt=jnp.array([element.tilt], dtype=jnp.float32),
-            fringe_integral=jnp.array([element.fint], dtype=jnp.float32),
-            fringe_integral_exit=jnp.array([element.fintx], dtype=jnp.float32),
-            gap=jnp.array([element.gap], dtype=jnp.float32),
+        return cheetah.Dipole(
+            length=torch.tensor(element.l, dtype=torch.float32),
+            angle=torch.tensor(element.angle, dtype=torch.float32),
+            dipole_e1=torch.tensor(element.e1, dtype=torch.float32),
+            dipole_e2=torch.tensor(element.e2, dtype=torch.float32),
+            tilt=torch.tensor(element.tilt, dtype=torch.float32),
+            fringe_integral=torch.tensor(element.fint, dtype=torch.float32),
+            fringe_integral_exit=torch.tensor(element.fintx, dtype=torch.float32),
+            gap=torch.tensor(element.gap, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,
         )
     elif isinstance(element, ocelot.RBend):
-        return lynx.RBend(
-            length=jnp.array([element.l], dtype=jnp.float32),
-            angle=jnp.array([element.angle], dtype=jnp.float32),
-            e1=jnp.array([element.e1], dtype=jnp.float32) - element.angle / 2,
-            e2=jnp.array([element.e2], dtype=jnp.float32) - element.angle / 2,
-            tilt=jnp.array([element.tilt], dtype=jnp.float32),
-            fringe_integral=jnp.array([element.fint], dtype=jnp.float32),
-            fringe_integral_exit=jnp.array([element.fintx], dtype=jnp.float32),
-            gap=jnp.array([element.gap], dtype=jnp.float32),
+        return cheetah.RBend(
+            length=torch.tensor(element.l, dtype=torch.float32),
+            angle=torch.tensor(element.angle, dtype=torch.float32),
+            rbend_e1=torch.tensor(element.e1, dtype=torch.float32) - element.angle / 2,
+            rbend_e2=torch.tensor(element.e2, dtype=torch.float32) - element.angle / 2,
+            tilt=torch.tensor(element.tilt, dtype=torch.float32),
+            fringe_integral=torch.tensor(element.fint, dtype=torch.float32),
+            fringe_integral_exit=torch.tensor(element.fintx, dtype=torch.float32),
+            gap=torch.tensor(element.gap, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,
         )
     elif isinstance(element, ocelot.Cavity):
-        return lynx.Cavity(
-            length=jnp.array([element.l], dtype=jnp.float32),
-            voltage=jnp.array([element.v], dtype=jnp.float32) * 1e9,
-            frequency=jnp.array([element.freq], dtype=jnp.float32),
-            phase=jnp.array([element.phi], dtype=jnp.float32),
+        return cheetah.Cavity(
+            length=torch.tensor(element.l, dtype=torch.float32),
+            voltage=torch.tensor(element.v, dtype=torch.float32) * 1e9,
+            frequency=torch.tensor(element.freq, dtype=torch.float32),
+            phase=torch.tensor(element.phi, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,
         )
     elif isinstance(element, ocelot.TDCavity):
         # TODO: Better replacement at some point?
-        return lynx.Cavity(
-            length=jnp.array([element.l], dtype=jnp.float32),
-            voltage=jnp.array([element.v], dtype=jnp.float32) * 1e9,
-            frequency=jnp.array([element.freq], dtype=jnp.float32),
-            phase=jnp.array([element.phi], dtype=jnp.float32),
+        return cheetah.Cavity(
+            length=torch.tensor(element.l, dtype=torch.float32),
+            voltage=torch.tensor(element.v, dtype=torch.float32) * 1e9,
+            frequency=torch.tensor(element.freq, dtype=torch.float32),
+            phase=torch.tensor(element.phi, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,
@@ -140,9 +140,9 @@ def ocelot2cheetah(
                 "WARNING: Diagnostic screen was converted with default screen"
                 " properties."
             )
-        return lynx.Screen(
-            resolution=jnp.array([2448, 2040]),
-            pixel_size=jnp.array([3.5488e-6, 2.5003e-6]),
+        return cheetah.Screen(
+            resolution=(2448, 2040),
+            pixel_size=torch.tensor([3.5488e-6, 2.5003e-6]),
             name=element.id,
             device=device,
             dtype=dtype,
@@ -162,9 +162,9 @@ def ocelot2cheetah(
         )
     elif isinstance(element, ocelot.Aperture):
         shape_translation = {"rect": "rectangular", "elip": "elliptical"}
-        return lynx.Aperture(
-            x_max=jnp.array([element.xmax], dtype=jnp.float32),
-            y_max=jnp.array([element.ymax], dtype=jnp.float32),
+        return cheetah.Aperture(
+            x_max=torch.tensor(element.xmax, dtype=torch.float32),
+            y_max=torch.tensor(element.ymax, dtype=torch.float32),
             shape=shape_translation[element.type],
             is_active=True,
             name=element.id,
@@ -177,8 +177,8 @@ def ocelot2cheetah(
                 f"WARNING: Unknown element {element.id} of type {type(element)},"
                 " replacing with drift section."
             )
-        return lynx.Drift(
-            length=jnp.array([element.l], dtype=jnp.float32),
+        return cheetah.Drift(
+            length=torch.tensor(element.l, dtype=torch.float32),
             name=element.id,
             device=device,
             dtype=dtype,

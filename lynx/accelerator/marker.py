@@ -3,20 +3,13 @@ from typing import Optional
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-from scipy import constants
-from scipy.constants import physical_constants
+import torch
 
-from lynx.particles import Beam
-from lynx.utils import UniqueNameGenerator
-
-from .element import Element
+from cheetah.accelerator.element import Element
+from cheetah.particles import Beam
+from cheetah.utils import UniqueNameGenerator
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
-
-rest_energy = (
-    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
-)  # Electron mass
-electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class Marker(Element):
@@ -39,11 +32,6 @@ class Marker(Element):
         # Markers would be able to record the beam tracked through them.
         return incoming
 
-    def broadcast(self, shape: tuple) -> Element:
-        new_marker = self.__class__(name=self.name)
-        new_marker.length = self.length.repeat(shape)
-        return new_marker
-
     @property
     def is_skippable(self) -> bool:
         return True
@@ -51,7 +39,7 @@ class Marker(Element):
     def split(self, resolution: jax.Array) -> list[Element]:
         return [self]
 
-    def plot(self, ax: plt.Axes, s: float) -> None:
+    def plot(self, ax: plt.Axes, s: float, vector_idx: Optional[tuple] = None) -> None:
         # Do nothing on purpose. Maybe later we decide markers should be shown, but for
         # now they are invisible.
         pass

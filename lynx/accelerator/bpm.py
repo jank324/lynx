@@ -1,24 +1,15 @@
-from copy import deepcopy
 from typing import Optional
 
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-from scipy import constants
-from scipy.constants import physical_constants
 
-from lynx.particles import Beam, ParameterBeam, ParticleBeam
-from lynx.utils import UniqueNameGenerator
-
-from .element import Element
+from cheetah.accelerator.element import Element
+from cheetah.particles import Beam, ParameterBeam, ParticleBeam
+from cheetah.utils import UniqueNameGenerator
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
-
-rest_energy = (
-    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
-)  # Electron mass
-electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
 class BPM(Element):
@@ -30,11 +21,19 @@ class BPM(Element):
     :param name: Unique identifier of the element.
     """
 
-    def __init__(self, is_active: bool = False, name: Optional[str] = None) -> None:
-        super().__init__(name=name)
+    def __init__(
+        self,
+        is_active: bool = False,
+        name: Optional[str] = None,
+        device: Optional[torch.device] = None,
+        dtype: Optional[torch.dtype] = None,
+    ) -> None:
+        super().__init__(name=name, device=device, dtype=dtype)
 
         self.is_active = is_active
-        self.reading = None
+        self.register_buffer(
+            "reading", torch.tensor(torch.nan, device=device, dtype=dtype)
+        )
 
     @property
     def is_skippable(self) -> bool:
@@ -46,35 +45,30 @@ class BPM(Element):
         )
 
     def track(self, incoming: Beam) -> Beam:
-        if incoming is Beam.empty:
-            self.reading = None
-        elif isinstance(incoming, ParameterBeam):
-            self.reading = jnp.stack([incoming.mu_x, incoming.mu_y])
+        if isinstance(incoming, ParameterBeam):
+            self.reading = torch.stack([incoming.mu_x, incoming.mu_y])
         elif isinstance(incoming, ParticleBeam):
             self.reading = jnp.stack([incoming.mu_x, incoming.mu_y])
         else:
             raise TypeError(f"Parameter incoming is of invalid type {type(incoming)}")
 
-        return deepcopy(incoming)
-
-    def broadcast(self, shape: tuple) -> Element:
-        new_bpm = self.__class__(is_active=self.is_active, name=self.name)
-        new_bpm.length = self.length.repeat(shape)
-        return new_bpm
+        return incoming.clone()
 
     def split(self, resolution: jax.Array) -> list[Element]:
         return [self]
 
-    def plot(self, ax: plt.Axes, s: float) -> None:
+    def plot(self, ax: plt.Axes, s: float, vector_idx: Optional[tuple] = None) -> None:
+        plot_s = s[vector_idx] if s.dim() > 0 else s
+
         alpha = 1 if self.is_active else 0.2
         patch = Rectangle(
-            (s, -0.3), 0, 0.3 * 2, color="darkkhaki", alpha=alpha, zorder=2
+            (plot_s, -0.3), 0, 0.3 * 2, color="darkkhaki", alpha=alpha, zorder=2
         )
         ax.add_patch(patch)
 
     @property
     def defining_features(self) -> list[str]:
-        return super().defining_features
+        return super().defining_features + ["is_active"]
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={repr(self.name)})"

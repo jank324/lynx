@@ -1,21 +1,16 @@
-from typing import Optional, Union
+from typing import Optional
 
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-from scipy import constants
 from scipy.constants import physical_constants
 
-from lynx.utils import UniqueNameGenerator
-
-from .element import Element
+from cheetah.accelerator.element import Element
+from cheetah.utils import UniqueNameGenerator
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = (
-    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
-)  # Electron mass
 electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
@@ -33,14 +28,14 @@ class Undulator(Element):
 
     def __init__(
         self,
-        length: jax.Array,
+        length: torch.Tensor,
         is_active: bool = False,
         name: Optional[str] = None,
         device=None,
-        dtype=jnp.float32,
+        dtype=None,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
-        super().__init__(name=name)
+        super().__init__(name=name, **factory_kwargs)
 
         self.length = jnp.asarray(length, **factory_kwargs)
         self.is_active = is_active
@@ -49,22 +44,17 @@ class Undulator(Element):
         device = self.length.device
         dtype = self.length.dtype
 
-        gamma = energy / rest_energy.to(device=device, dtype=dtype)
-        igamma2 = 1 / gamma**2 if gamma != 0 else 0.0
+        gamma = energy / electron_mass_eV
+        igamma2 = torch.where(gamma != 0, 1 / gamma**2, torch.zeros_like(gamma))
 
-        tm = jnp.eye(7, device=device, dtype=dtype).repeat((*energy.shape, 1, 1))
+        vector_shape = torch.broadcast_shapes(self.length.shape, igamma2.shape)
+
+        tm = torch.eye(7, device=device, dtype=dtype).repeat((*vector_shape, 1, 1))
         tm[..., 0, 1] = self.length
         tm[..., 2, 3] = self.length
         tm[..., 4, 5] = self.length * igamma2
 
         return tm
-
-    def broadcast(self, shape: tuple) -> Element:
-        return self.__class__(
-            length=self.length.repeat(shape),
-            is_active=self.is_active,
-            name=self.name,
-        )
 
     @property
     def is_skippable(self) -> bool:
@@ -74,12 +64,15 @@ class Undulator(Element):
         # TODO: Implement splitting for undulator properly, for now just return self
         return [self]
 
-    def plot(self, ax: plt.Axes, s: float) -> None:
+    def plot(self, ax: plt.Axes, s: float, vector_idx: Optional[tuple] = None) -> None:
+        plot_s = s[vector_idx] if s.dim() > 0 else s
+        plot_length = self.length[vector_idx] if self.length.dim() > 0 else self.length
+
         alpha = 1 if self.is_active else 0.2
         height = 0.4
 
         patch = Rectangle(
-            (s, 0), self.length[0], height, color="tab:purple", alpha=alpha, zorder=2
+            (plot_s, 0), plot_length, height, color="tab:purple", alpha=alpha, zorder=2
         )
         ax.add_patch(patch)
 

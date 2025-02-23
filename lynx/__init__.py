@@ -1,5 +1,5 @@
-import lynx.converters  # noqa: F401
-from lynx.accelerator import (  # noqa: F401
+from . import converters  # noqa: F401
+from .accelerator import (  # noqa: F401
     BPM,
     Aperture,
     Cavity,
@@ -13,7 +13,9 @@ from lynx.accelerator import (  # noqa: F401
     Screen,
     Segment,
     Solenoid,
+    SpaceChargeKick,
+    TransverseDeflectingCavity,
     Undulator,
     VerticalCorrector,
 )
-from lynx.particles import ParameterBeam, ParticleBeam  # noqa: F401
+from .particles import Beam, ParameterBeam, ParticleBeam  # noqa: F401

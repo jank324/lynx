@@ -59,6 +59,14 @@ Accelerator
     :members:
     :undoc-members:
 
+.. automodule:: accelerator.space_charge_kick
+    :members:
+    :undoc-members:
+
+.. automodule:: accelerator.transverse_deflecting_cavity
+    :members:
+    :undoc-members:
+
 .. automodule:: accelerator.undulator
     :members:
     :undoc-members:

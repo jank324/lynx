@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath("../cheetah"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "Cheetah"
-copyright = "2023, Jan Kaiser, Chenran Xu"
+copyright = "2021-2025 Jan Kaiser, Chenran Xu"
 author = "Jan Kaiser, Chenran Xu"
 release = "0.7.0"
 
@@ -26,7 +26,14 @@ extensions = [
     "nbsphinx",  # To render Jupyter notebooks
     "sphinx.ext.autodoc",  # To generate documentation from docstrings
     "sphinx.ext.autosummary",  # To automatically generate recursively
+    "myst_parser",  # To parse markdown files
 ]
+myst_enable_extensions = ["dollarmath", "amsmath"]  # Enable math typesetting
+
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",  # Add markdown support
+}
 autosummary_generate = True  # Turn on autosummary
 
 templates_path = ["_templates"]

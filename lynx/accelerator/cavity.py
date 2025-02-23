@@ -7,16 +7,17 @@ from matplotlib.patches import Rectangle
 from scipy import constants
 from scipy.constants import physical_constants
 
-from lynx.particles import Beam, ParameterBeam, ParticleBeam
-from lynx.utils import UniqueNameGenerator
-
-from .element import Element
+from cheetah.accelerator.element import Element
+from cheetah.particles import Beam, ParameterBeam, ParticleBeam
+from cheetah.track_methods import base_rmatrix
+from cheetah.utils import (
+    UniqueNameGenerator,
+    compute_relativistic_factors,
+    verify_device_and_dtype,
+)
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
-rest_energy = (
-    constants.electron_mass * constants.speed_of_light**2 / constants.elementary_charge
-)  # Electron mass
 electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][0] * 1e6
 
 
@@ -33,50 +34,52 @@ class Cavity(Element):
 
     def __init__(
         self,
-        length: jax.Array,
-        voltage: Optional[jax.Array] = None,
-        phase: Optional[jax.Array] = None,
-        frequency: Optional[jax.Array] = None,
+        length: torch.Tensor,
+        voltage: Optional[torch.Tensor] = None,
+        phase: Optional[torch.Tensor] = None,
+        frequency: Optional[torch.Tensor] = None,
         name: Optional[str] = None,
         device=None,
-        dtype=jnp.float32,
+        dtype=None,
     ) -> None:
+        device, dtype = verify_device_and_dtype(
+            [length, voltage, phase, frequency], device, dtype
+        )
         factory_kwargs = {"device": device, "dtype": dtype}
-        super().__init__(name=name)
+        super().__init__(name=name, **factory_kwargs)
 
-        self.length = jnp.asarray(length, **factory_kwargs)
-        self.voltage = (
-            jnp.asarray(voltage, **factory_kwargs)
-            if voltage is not None
-            else jnp.zeros_like(length)
-        )
-        self.phase = (
-            jnp.asarray(phase, **factory_kwargs)
-            if phase is not None
-            else jnp.zeros_like(length)
-        )
-        self.frequency = (
-            jnp.asarray(frequency, **factory_kwargs)
-            if frequency is not None
-            else jnp.zeros_like(length)
-        )
+        self.register_buffer("voltage", torch.tensor(0.0, **factory_kwargs))
+        self.register_buffer("phase", torch.tensor(0.0, **factory_kwargs))
+        self.register_buffer("frequency", torch.tensor(0.0, **factory_kwargs))
+
+        self.length = torch.as_tensor(length, **factory_kwargs)
+        if voltage is not None:
+            self.voltage = torch.as_tensor(voltage, **factory_kwargs)
+        if phase is not None:
+            self.phase = torch.as_tensor(phase, **factory_kwargs)
+        if frequency is not None:
+            self.frequency = torch.as_tensor(frequency, **factory_kwargs)
 
     @property
     def is_active(self) -> bool:
-        return any(self.voltage != 0)
+        return torch.any(self.voltage != 0)
 
     @property
     def is_skippable(self) -> bool:
         return not self.is_active
 
-    def transfer_map(self, energy: jax.Array) -> jax.Array:
-        # There used to be a check for voltage > 0 here, where the cavity transfer map
-        # was only computed for the elements with voltage > 0 and a basermatrix was
-        # used otherwise. This was removed because it was causing issues with the
-        # vectorisation, but I am not sure it is okay to remove.
-        tm = self._cavity_rmatrix(energy)
-
-        return tm
+    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+        return torch.where(
+            (self.voltage != 0).unsqueeze(-1).unsqueeze(-1),
+            self._cavity_rmatrix(energy),
+            base_rmatrix(
+                length=self.length,
+                k1=torch.zeros_like(self.length),
+                hx=torch.zeros_like(self.length),
+                tilt=torch.zeros_like(self.length),
+                energy=energy,
+            ),
+        )
 
     def track(self, incoming: Beam) -> Beam:
         """
@@ -87,27 +90,17 @@ class Cavity(Element):
         :param incoming: Beam of particles entering the element.
         :return: Beam of particles exiting the element.
         """
-        if incoming is Beam.empty:
-            return incoming
-        elif isinstance(incoming, (ParameterBeam, ParticleBeam)):
+        if isinstance(incoming, (ParameterBeam, ParticleBeam)):
             return self._track_beam(incoming)
         else:
             raise TypeError(f"Parameter incoming is of invalid type {type(incoming)}")
 
     def _track_beam(self, incoming: Beam) -> Beam:
-        device = self.length.device
-        dtype = self.length.dtype
-
-        beta0 = jnp.full_like(self.length, 1.0)
-        igamma2 = jnp.full_like(self.length, 0.0)
-        g0 = jnp.full_like(self.length, 1e10)
-
-        mask = incoming.energy != 0
-        g0[mask] = incoming.energy[mask] / electron_mass_eV.to(
-            device=device, dtype=dtype
-        )
-        igamma2[mask] = 1 / g0[mask] ** 2
-        beta0[mask] = jnp.sqrt(1 - igamma2[mask])
+        """
+        Track particles through the cavity. The input can be a `ParameterBeam` or a
+        `ParticleBeam`.
+        """
+        gamma0, igamma2, beta0 = compute_relativistic_factors(incoming.energy)
 
         phi = jnp.deg2rad(self.phase)
 
@@ -128,8 +121,7 @@ class Cavity(Element):
         if jnp.any(incoming.energy + delta_energy > 0):
             k = 2 * jnp.pi * self.frequency / constants.speed_of_light
             outgoing_energy = incoming.energy + delta_energy
-            g1 = outgoing_energy / electron_mass_eV
-            beta1 = jnp.sqrt(1 - 1 / g1**2)
+            gamma1, _, beta1 = compute_relativistic_factors(outgoing_energy)
 
             if isinstance(incoming, ParameterBeam):
                 outgoing_mu[..., 5] = incoming._mu[..., 5] * incoming.energy * beta0 / (
@@ -164,18 +156,18 @@ class Cavity(Element):
             if jnp.any(delta_energy > 0):
                 T566 = (
                     self.length
-                    * (beta0**3 * g0**3 - beta1**3 * g1**3)
-                    / (2 * beta0 * beta1**3 * g0 * (g0 - g1) * g1**3)
+                    * (beta0**3 * gamma0**3 - beta1**3 * gamma1**3)
+                    / (2 * beta0 * beta1**3 * gamma0 * (gamma0 - gamma1) * gamma1**3)
                 )
                 T556 = (
                     beta0
                     * k
                     * self.length
                     * dgamma
-                    * g0
-                    * (beta1**3 * g1**3 + beta0 * (g0 - g1**3))
-                    * jnp.sin(phi)
-                    / (beta1**3 * g1**3 * (g0 - g1) ** 2)
+                    * gamma0
+                    * (beta1**3 * gamma1**3 + beta0 * (gamma0 - gamma1**3))
+                    * torch.sin(phi)
+                    / (beta1**3 * gamma1**3 * (gamma0 - gamma1) ** 2)
                 )
                 T555 = (
                     beta0**2
@@ -186,16 +178,16 @@ class Cavity(Element):
                     * (
                         dgamma
                         * (
-                            2 * g0 * g1**3 * (beta0 * beta1**3 - 1)
-                            + g0**2
-                            + 3 * g1**2
+                            2 * gamma0 * gamma1**3 * (beta0 * beta1**3 - 1)
+                            + gamma0**2
+                            + 3 * gamma1**2
                             - 2
                         )
-                        / (beta1**3 * g1**3 * (g0 - g1) ** 3)
-                        * jnp.sin(phi) ** 2
-                        - (g1 * g0 * (beta1 * beta0 - 1) + 1)
-                        / (beta1 * g1 * (g0 - g1) ** 2)
-                        * jnp.cos(phi)
+                        / (beta1**3 * gamma1**3 * (gamma0 - gamma1) ** 3)
+                        * torch.sin(phi) ** 2
+                        - (gamma1 * gamma0 * (beta1 * beta0 - 1) + 1)
+                        / (beta1 * gamma1 * (gamma0 - gamma1) ** 2)
+                        * torch.cos(phi)
                     )
                 )
 
@@ -227,9 +219,9 @@ class Cavity(Element):
 
         if isinstance(incoming, ParameterBeam):
             outgoing = ParameterBeam(
-                outgoing_mu,
-                outgoing_cov,
-                outgoing_energy,
+                mu=outgoing_mu,
+                cov=outgoing_cov,
+                energy=outgoing_energy,
                 total_charge=incoming.total_charge,
                 device=outgoing_mu.device,
                 dtype=outgoing_mu.dtype,
@@ -237,9 +229,10 @@ class Cavity(Element):
             return outgoing
         else:  # ParticleBeam
             outgoing = ParticleBeam(
-                outgoing_particles,
-                outgoing_energy,
+                particles=outgoing_particles,
+                energy=outgoing_energy,
                 particle_charges=incoming.particle_charges,
+                survival_probabilities=incoming.survival_probabilities,
                 device=outgoing_particles.device,
                 dtype=outgoing_particles.dtype,
             )
@@ -247,13 +240,12 @@ class Cavity(Element):
 
     def _cavity_rmatrix(self, energy: jax.Array) -> jax.Array:
         """Produces an R-matrix for a cavity when it is on, i.e. voltage > 0.0."""
-        device = self.length.device
-        dtype = self.length.dtype
+        factory_kwargs = {"device": self.length.device, "dtype": self.length.dtype}
 
         phi = jnp.deg2rad(self.phase)
         delta_energy = self.voltage * jnp.cos(phi)
         # Comment from Ocelot: Pure pi-standing-wave case
-        eta = 1.0
+        eta = torch.tensor(1.0, **factory_kwargs)
         Ei = energy / electron_mass_eV
         Ef = (energy + delta_energy) / electron_mass_eV
         Ep = (Ef - Ei) / self.length  # Derivative of the energy
@@ -281,15 +273,15 @@ class Cavity(Element):
             * (jnp.cos(alpha) + jnp.sqrt(2 / eta) * jnp.cos(phi) * jnp.sin(alpha))
         )
 
-        r56 = 0.0
-        beta0 = 1.0
-        beta1 = 1.0
+        r56 = torch.tensor(0.0, **factory_kwargs)
+        beta0 = torch.tensor(1.0, **factory_kwargs)
+        beta1 = torch.tensor(1.0, **factory_kwargs)
 
-        k = 2 * jnp.pi * self.frequency / constants.speed_of_light
-        r55_cor = 0.0
-        if jnp.any((self.voltage != 0) & (energy != 0)):  # TODO: Do we need this if?
-            beta0 = jnp.sqrt(1 - 1 / Ei**2)
-            beta1 = jnp.sqrt(1 - 1 / Ef**2)
+        k = 2 * torch.pi * self.frequency / constants.speed_of_light
+        r55_cor = torch.tensor(0.0, **factory_kwargs)
+        if torch.any((self.voltage != 0) & (energy != 0)):  # TODO: Do we need this if?
+            beta0 = torch.sqrt(1 - 1 / Ei**2)
+            beta1 = torch.sqrt(1 - 1 / Ef**2)
 
             r56 = -self.length / (Ef**2 * Ei * beta1) * (Ef + Ei) / (beta1 + beta0)
             g0 = Ei
@@ -308,7 +300,12 @@ class Cavity(Element):
         r66 = Ei / Ef * beta0 / beta1
         r65 = k * jnp.sin(phi) * self.voltage / (Ef * beta1 * electron_mass_eV)
 
-        R = jnp.eye(7, device=device, dtype=dtype).repeat((*self.length.shape, 1, 1))
+        # Make sure that all matrix elements have the same shape
+        r11, r12, r21, r22, r55_cor, r56, r65, r66 = torch.broadcast_tensors(
+            r11, r12, r21, r22, r55_cor, r56, r65, r66
+        )
+
+        R = torch.eye(7, **factory_kwargs).repeat((*r11.shape, 1, 1))
         R[..., 0, 0] = r11
         R[..., 0, 1] = r12
         R[..., 1, 0] = r21
@@ -324,26 +321,20 @@ class Cavity(Element):
 
         return R
 
-    def broadcast(self, shape: tuple) -> Element:
-        return self.__class__(
-            length=self.length.repeat(shape),
-            voltage=self.voltage.repeat(shape),
-            phase=self.phase.repeat(shape),
-            frequency=self.frequency.repeat(shape),
-            name=self.name,
-        )
-
-    def split(self, resolution: jax.Array) -> list[Element]:
+    def split(self, resolution: torch.Tensor) -> list[Element]:
         # TODO: Implement splitting for cavity properly, for now just returns the
         # element itself
         return [self]
 
-    def plot(self, ax: plt.Axes, s: float) -> None:
+    def plot(self, ax: plt.Axes, s: float, vector_idx: Optional[tuple] = None) -> None:
+        plot_s = s[vector_idx] if s.dim() > 0 else s
+        plot_length = self.length[vector_idx] if self.length.dim() > 0 else self.length
+
         alpha = 1 if self.is_active else 0.2
         height = 0.4
 
         patch = Rectangle(
-            (s, 0), self.length[0], height, color="gold", alpha=alpha, zorder=2
+            (plot_s, 0), plot_length, height, color="gold", alpha=alpha, zorder=2
         )
         ax.add_patch(patch)
 
