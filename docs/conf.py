@@ -9,12 +9,12 @@ import os
 import sys
 
 # Source code directory, relative to this file, for sphinx-autobuild
-sys.path.insert(0, os.path.abspath("../cheetah"))
+sys.path.insert(0, os.path.abspath("../lynx"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "Cheetah"
+project = "Lynx"
 copyright = "2021-2025 Jan Kaiser, Chenran Xu"
 author = "Jan Kaiser, Chenran Xu"
 release = "0.7.0"

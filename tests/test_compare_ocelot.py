@@ -14,12 +14,12 @@ def test_dipole():
     Test that the tracking results through a Cheeath `Dipole` element match those
     through an Oclet `Bend` element.
     """
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_dipole = cheetah.Dipole(length=torch.tensor(0.1), angle=torch.tensor(0.1))
-    outgoing_beam = cheetah_dipole.track(incoming_beam)
+    lynx_dipole = lynx.Dipole(length=jnp.asarray(0.1), angle=jnp.asarray(0.1))
+    outgoing_beam = lynx_dipole.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -41,14 +41,14 @@ def test_dipole_with_float64():
     Test that the tracking results through a Cheeath `Dipole` element match those
     through an Oclet `Bend` element using float64 precision.
     """
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001", dtype=jnp.float64
     )
-    cheetah_dipole = cheetah.Dipole(
-        length=torch.tensor(0.1), angle=torch.tensor(0.1), dtype=torch.float64
+    lynx_dipole = lynx.Dipole(
+        length=jnp.asarray(0.1), angle=jnp.asarray(0.1), dtype=jnp.float64
     )
-    outgoing_beam = cheetah_dipole.track(incoming_beam)
+    outgoing_beam = lynx_dipole.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -70,17 +70,17 @@ def test_dipole_with_fringe_field():
     Test that the tracking results through a Cheeath `Dipole` element match those
     through an Oclet `Bend` element when there are fringe fields.
     """
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_dipole = cheetah.Dipole(
-        length=torch.tensor(0.1),
-        angle=torch.tensor(0.1),
-        fringe_integral=torch.tensor(0.1),
-        gap=torch.tensor(0.2),
+    lynx_dipole = lynx.Dipole(
+        length=jnp.asarray(0.1),
+        angle=jnp.asarray(0.1),
+        fringe_integral=jnp.asarray(0.1),
+        gap=jnp.asarray(0.2),
     )
-    outgoing_beam = cheetah_dipole.track(incoming_beam)
+    outgoing_beam = lynx_dipole.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -103,22 +103,22 @@ def test_dipole_with_fringe_field_and_tilt():
     through an Oclet `Bend` element when there are fringe fields and tilt, and the
     e1 and e2 angles are set.
     """
-    # Cheetah
+    # Lynx
     bend_angle = np.pi / 6
     tilt_angle = np.pi / 4
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_dipole = cheetah.Dipole(
-        length=torch.tensor(1.0),
-        angle=torch.tensor(bend_angle),
-        fringe_integral=torch.tensor(0.1),
-        gap=torch.tensor(0.2),
-        tilt=torch.tensor(tilt_angle),
-        dipole_e1=torch.tensor(bend_angle / 2),
-        dipole_e2=torch.tensor(bend_angle / 2),
+    lynx_dipole = lynx.Dipole(
+        length=jnp.asarray(1.0),
+        angle=jnp.asarray(bend_angle),
+        fringe_integral=jnp.asarray(0.1),
+        gap=jnp.asarray(0.2),
+        tilt=jnp.asarray(tilt_angle),
+        dipole_e1=jnp.asarray(bend_angle / 2),
+        dipole_e2=jnp.asarray(bend_angle / 2),
     )
-    outgoing_beam = cheetah_dipole(incoming_beam)
+    outgoing_beam = lynx_dipole(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -148,23 +148,23 @@ def test_aperture():
     Test that the tracking results through a Cheeath `Aperture` element match those
     through an Oclet `Aperture` element.
     """
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_segment = lynx.Segment(
+    lynx_segment = lynx.Segment(
         [
-            cheetah.Aperture(
-                x_max=torch.tensor(2e-4),
-                y_max=torch.tensor(2e-4),
+            lynx.Aperture(
+                x_max=jnp.asarray(2e-4),
+                y_max=jnp.asarray(2e-4),
                 shape="rectangular",
                 name="aperture",
                 is_active=True,
             ),
-            cheetah.Drift(length=torch.tensor(0.1)),
+            lynx.Drift(length=jnp.asarray(0.1)),
         ]
     )
-    outgoing_beam = cheetah_segment.track(incoming_beam)
+    outgoing_beam = lynx_segment.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -187,23 +187,23 @@ def test_aperture_elliptical():
     Test that the tracking results through an elliptical Cheeath `Aperture` element
     match those through an elliptical Oclet `Aperture` element.
     """
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_segment = lynx.Segment(
+    lynx_segment = lynx.Segment(
         [
-            cheetah.Aperture(
-                x_max=torch.tensor(2e-4),
-                y_max=torch.tensor(2e-4),
+            lynx.Aperture(
+                x_max=jnp.asarray(2e-4),
+                y_max=jnp.asarray(2e-4),
                 shape="elliptical",
                 name="aperture",
                 is_active=True,
             ),
-            cheetah.Drift(length=torch.tensor(0.1)),
+            lynx.Drift(length=jnp.asarray(0.1)),
         ]
     )
-    outgoing_beam = cheetah_segment.track(incoming_beam)
+    outgoing_beam = lynx_segment.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -232,12 +232,12 @@ def test_solenoid():
     Test that the tracking results through a Cheeath `Solenoid` element match those
     through an Oclet `Solenoid` element.
     """
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_solenoid = cheetah.Solenoid(length=torch.tensor(0.5), k=torch.tensor(5.0))
-    outgoing_beam = cheetah_solenoid.track(incoming_beam)
+    lynx_solenoid = lynx.Solenoid(length=jnp.asarray(0.5), k=jnp.asarray(5.0))
+    outgoing_beam = lynx_solenoid.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -266,12 +266,12 @@ def test_ares_ea():
     ares.areamqzm3.k1 = 5.0
     ares.areamchm1.k1 = -2e-3
 
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_segment = lynx.Segment.from_ocelot(cell)
-    outgoing_beam = cheetah_segment.track(incoming_beam)
+    lynx_segment = lynx.Segment.from_ocelot(cell)
+    outgoing_beam = lynx_segment.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -298,11 +298,11 @@ def test_ares_ea():
 
 def test_twiss_particle_beam():
     """
-    Test that the twiss parameters computed by Cheetah for a `ParticleBeam` loaded from
+    Test that the twiss parameters computed by Lynx for a `ParticleBeam` loaded from
     an Astra beam are the same as those computed by Ocelot for the `ParticleArray`
     loaded from that same Astra beam.
     """
-    # Cheetah
+    # Lynx
     particle_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
@@ -338,11 +338,11 @@ def test_twiss_particle_beam():
 
 def test_twiss_parameter_beam():
     """
-    Test that the twiss parameters computed by Cheetah for a `ParameterBeam` loaded from
+    Test that the twiss parameters computed by Lynx for a `ParameterBeam` loaded from
     an Astra beam are the same as those computed by Ocelot for the `ParticleArray`
     loaded from that same Astra beam.
     """
-    # Cheetah
+    # Lynx
     parameter_beam = lynx.ParameterBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
@@ -378,7 +378,7 @@ def test_twiss_parameter_beam():
 
 def test_astra_import():
     """
-    Test if the beam imported from Astra in Cheetah matches the beam imported from Astra
+    Test if the beam imported from Astra in Lynx matches the beam imported from Astra
     in Ocelot.
     """
     beam = lynx.ParticleBeam.from_astra("tests/resources/ACHIP_EA1_2021.1351.001")
@@ -395,21 +395,19 @@ def test_quadrupole():
     Test if the tracking results through a Cheeath `Quadrupole` element match those
     through an Ocelot `Quadrupole` element.
     """
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_quadrupole = cheetah.Quadrupole(
-        length=torch.tensor(0.23), k1=torch.tensor(5.0)
-    )
-    cheetah_segment = cheetah.Segment(
+    lynx_quadrupole = lynx.Quadrupole(length=jnp.asarray(0.23), k1=jnp.asarray(5.0))
+    lynx_segment = lynx.Segment(
         [
-            cheetah.Drift(length=torch.tensor(0.1)),
-            cheetah_quadrupole,
-            cheetah.Drift(length=torch.tensor(0.1)),
+            lynx.Drift(length=jnp.asarray(0.1)),
+            lynx_quadrupole,
+            lynx.Drift(length=jnp.asarray(0.1)),
         ]
     )
-    outgoing_beam = cheetah_segment.track(incoming_beam)
+    outgoing_beam = lynx_segment.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -437,21 +435,21 @@ def test_tilted_quadrupole():
     Test if the tracking results through a tilted Cheeath `Quadrupole` element match
     those through a tilted Ocelot `Quadrupole` element.
     """
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_quadrupole = cheetah.Quadrupole(
-        length=torch.tensor(0.23), k1=torch.tensor(5.0), tilt=torch.tensor(0.79)
+    lynx_quadrupole = lynx.Quadrupole(
+        length=jnp.asarray(0.23), k1=jnp.asarray(5.0), tilt=jnp.asarray(0.79)
     )
-    cheetah_segment = lynx.Segment(
+    lynx_segment = lynx.Segment(
         [
-            cheetah.Drift(length=torch.tensor(0.1)),
-            cheetah_quadrupole,
-            cheetah.Drift(length=torch.tensor(0.1)),
+            lynx.Drift(length=jnp.asarray(0.1)),
+            lynx_quadrupole,
+            lynx.Drift(length=jnp.asarray(0.1)),
         ]
     )
-    outgoing_beam = cheetah_segment.track(incoming_beam)
+    outgoing_beam = lynx_segment.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -478,19 +476,19 @@ def test_sbend():
     Test if the tracking results through a Cheeath `Dipole` element match those through
     an Ocelot `SBend` element.
     """
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_dipole = cheetah.Dipole(length=torch.tensor(0.1), angle=torch.tensor(0.2))
-    cheetah_segment = cheetah.Segment(
+    lynx_dipole = lynx.Dipole(length=jnp.asarray(0.1), angle=jnp.asarray(0.2))
+    lynx_segment = lynx.Segment(
         [
-            cheetah.Drift(length=torch.tensor(0.1)),
-            cheetah_dipole,
-            cheetah.Drift(length=torch.tensor(0.1)),
+            lynx.Drift(length=jnp.asarray(0.1)),
+            lynx_dipole,
+            lynx.Drift(length=jnp.asarray(0.1)),
         ]
     )
-    outgoing_beam = cheetah_segment.track(incoming_beam)
+    outgoing_beam = lynx_segment.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -519,24 +517,24 @@ def test_rbend():
     Test if the tracking results through a Cheeath `RBend` element match those through
     an Ocelot `RBend` element.
     """
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_dipole = cheetah.RBend(
-        length=torch.tensor(0.1),
-        angle=torch.tensor(0.2),
-        fringe_integral=torch.tensor(0.1),
-        gap=torch.tensor(0.2),
+    lynx_dipole = lynx.RBend(
+        length=jnp.asarray(0.1),
+        angle=jnp.asarray(0.2),
+        fringe_integral=jnp.asarray(0.1),
+        gap=jnp.asarray(0.2),
     )
-    cheetah_segment = lynx.Segment(
+    lynx_segment = lynx.Segment(
         [
-            cheetah.Drift(length=torch.tensor(0.1)),
-            cheetah_dipole,
-            cheetah.Drift(length=torch.tensor(0.1)),
+            lynx.Drift(length=jnp.asarray(0.1)),
+            lynx_dipole,
+            lynx.Drift(length=jnp.asarray(0.1)),
         ]
     )
-    outgoing_beam = cheetah_segment.track(incoming_beam)
+    outgoing_beam = lynx_segment.track(incoming_beam)
 
     # Ocelot
     incoming_p_array = ocelot.astraBeam2particleArray(
@@ -562,7 +560,7 @@ def test_rbend():
 
 def test_convert_rbend():
     """
-    Test if the tracking results through a ocelot-converted Cheetah segment match
+    Test if the tracking results through a ocelot-converted Lynx segment match
     those through an Ocelot section with an `RBend` element.
     """
     # Ocelot
@@ -582,12 +580,12 @@ def test_convert_rbend():
         lattice, deepcopy(incoming_p_array), navigator, print_progress=False
     )
 
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_segment = lynx.Segment.from_ocelot(lattice.sequence)
-    outgoing_beam = cheetah_segment.track(incoming_beam)
+    lynx_segment = lynx.Segment.from_ocelot(lattice.sequence)
+    outgoing_beam = lynx_segment.track(incoming_beam)
 
     assert np.allclose(
         outgoing_beam.particles[:, :6].cpu().numpy(),
@@ -619,12 +617,12 @@ def test_asymmetric_bend():
         lattice, deepcopy(incoming_p_array), navigator, print_progress=False
     )
 
-    # Cheetah
+    # Lynx
     incoming_beam = lynx.ParticleBeam.from_astra(
         "tests/resources/ACHIP_EA1_2021.1351.001"
     )
-    cheetah_segment = lynx.Segment.from_ocelot(lattice.sequence)
-    outgoing_beam = cheetah_segment.track(incoming_beam)
+    lynx_segment = lynx.Segment.from_ocelot(lattice.sequence)
+    outgoing_beam = lynx_segment.track(incoming_beam)
 
     assert np.allclose(
         outgoing_beam.particles[:, :6].cpu().numpy(),
@@ -685,18 +683,16 @@ def test_cavity():
     _, outgoing_parray = ocelot.track(lattice, deepcopy(p_array), navigator)
     derived_twiss = ocelot.cpbd.beam.get_envelope(outgoing_parray)
 
-    # Cheetah
-    incoming_beam = cheetah.ParticleBeam.from_ocelot(
-        parray=p_array, dtype=torch.float64
+    # Lynx
+    incoming_beam = lynx.ParticleBeam.from_ocelot(parray=p_array, dtype=jnp.float64)
+    lynx_cavity = lynx.Cavity(
+        length=jnp.asarray(1.0377),
+        voltage=jnp.asarray(0.01815975e9),
+        frequency=jnp.asarray(1.3e9),
+        phase=jnp.asarray(0.0),
+        dtype=jnp.float64,
     )
-    cheetah_cavity = cheetah.Cavity(
-        length=torch.tensor(1.0377),
-        voltage=torch.tensor(0.01815975e9),
-        frequency=torch.tensor(1.3e9),
-        phase=torch.tensor(0.0),
-        dtype=torch.float64,
-    )
-    outgoing_beam = cheetah_cavity.track(incoming_beam)
+    outgoing_beam = lynx_cavity.track(incoming_beam)
 
     # Compare
     assert np.isclose(outgoing_beam.beta_x.cpu().numpy(), derived_twiss.beta_x)
@@ -739,18 +735,16 @@ def test_cavity_non_zero_phase():
     _, outgoing_parray = ocelot.track(lattice, deepcopy(p_array), navigator)
     derived_twiss = ocelot.cpbd.beam.get_envelope(outgoing_parray)
 
-    # Cheetah
-    incoming_beam = cheetah.ParticleBeam.from_ocelot(
-        parray=p_array, dtype=torch.float64
+    # Lynx
+    incoming_beam = lynx.ParticleBeam.from_ocelot(parray=p_array, dtype=jnp.float64)
+    lynx_cavity = lynx.Cavity(
+        length=jnp.asarray(1.0377),
+        voltage=jnp.asarray(0.01815975e9),
+        frequency=jnp.asarray(1.3e9),
+        phase=jnp.asarray(30.0),
+        dtype=jnp.float64,
     )
-    cheetah_cavity = cheetah.Cavity(
-        length=torch.tensor(1.0377),
-        voltage=torch.tensor(0.01815975e9),
-        frequency=torch.tensor(1.3e9),
-        phase=torch.tensor(30.0),
-        dtype=torch.float64,
-    )
-    outgoing_beam = cheetah_cavity.track(incoming_beam)
+    outgoing_beam = lynx_cavity.track(incoming_beam)
 
     # Compare
     assert np.isclose(outgoing_beam.beta_x.cpu().numpy(), derived_twiss.beta_x)

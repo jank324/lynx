@@ -6,7 +6,6 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from torch import nn
 
 from lynx.particles import Beam, ParameterBeam, ParticleBeam
@@ -26,7 +25,7 @@ class Element(ABC, eqx.Module):
         super().__init__()
 
         self.name = name if name is not None else generate_unique_name()
-        self.register_buffer("length", torch.tensor(0.0, device=device, dtype=dtype))
+        self.register_buffer("length", jnp.asarray(0.0, device=device, dtype=dtype))
 
     def transfer_map(self, energy: jax.Array) -> jax.Array:
         r"""
@@ -51,7 +50,7 @@ class Element(ABC, eqx.Module):
         represented using a matrix multiplication, i.e. the augmented matrix as in an
         affine transformation.
 
-        :param energy: Reference energy of the Beam. Read from the fed-in Cheetah Beam.
+        :param energy: Reference energy of the Beam. Read from the fed-in Lynx Beam.
         :return: A 7x7 Matrix for further calculations.
         """
         raise NotImplementedError
@@ -91,7 +90,7 @@ class Element(ABC, eqx.Module):
             raise TypeError(f"Parameter incoming is of invalid type {type(incoming)}")
 
     def forward(self, incoming: Beam) -> Beam:
-        """Forward function required by `torch.nn.Module`. Simply calls `track`."""
+        """Forward function required by `jnp.nn.Module`. Simply calls `track`."""
         return self.track(incoming)
 
     @property
@@ -122,7 +121,7 @@ class Element(ABC, eqx.Module):
             **{
                 feature: (
                     getattr(self, feature).clone()
-                    if isinstance(getattr(self, feature), torch.Tensor)
+                    if isinstance(getattr(self, feature), jnp.Array)
                     else deepcopy(getattr(self, feature))
                 )
                 for feature in self.defining_features

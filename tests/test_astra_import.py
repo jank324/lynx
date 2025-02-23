@@ -47,15 +47,15 @@ def test_astra_to_parameter_beam_dtypes():
     """Test that Astra beams are correctly loaded into particle beams."""
     beam = lynx.ParameterBeam.from_astra("tests/resources/ACHIP_EA1_2021.1351.001")
 
-    assert beam.mu_x.dtype == torch.float32
-    assert beam.mu_px.dtype == torch.float32
-    assert beam.mu_y.dtype == torch.float32
-    assert beam.mu_py.dtype == torch.float32
-    assert beam.sigma_x.dtype == torch.float32
-    assert beam.sigma_px.dtype == torch.float32
-    assert beam.sigma_y.dtype == torch.float32
-    assert beam.sigma_py.dtype == torch.float32
-    assert beam.sigma_tau.dtype == torch.float32
-    assert beam.sigma_p.dtype == torch.float32
-    assert beam.energy.dtype == torch.float32
-    assert beam.total_charge.dtype == torch.float32
+    assert beam.mu_x.dtype == jnp.float32
+    assert beam.mu_px.dtype == jnp.float32
+    assert beam.mu_y.dtype == jnp.float32
+    assert beam.mu_py.dtype == jnp.float32
+    assert beam.sigma_x.dtype == jnp.float32
+    assert beam.sigma_px.dtype == jnp.float32
+    assert beam.sigma_y.dtype == jnp.float32
+    assert beam.sigma_py.dtype == jnp.float32
+    assert beam.sigma_tau.dtype == jnp.float32
+    assert beam.sigma_p.dtype == jnp.float32
+    assert beam.energy.dtype == jnp.float32
+    assert beam.total_charge.dtype == jnp.float32

@@ -1,16 +1,16 @@
 import math
 from typing import Optional, Tuple, Union
 
-import torch
+import jax.numpy as jnp
 
 
 def _kde_marginal_pdf(
-    values: torch.Tensor,
-    bins: torch.Tensor,
-    sigma: torch.Tensor,
-    weights: Optional[torch.Tensor] = None,
-    epsilon: Union[torch.Tensor, float] = 1e-10,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+    values: jnp.Array,
+    bins: jnp.Array,
+    sigma: jnp.Array,
+    weights: Optional[jnp.Array] = None,
+    epsilon: Union[jnp.Array, float] = 1e-10,
+) -> Tuple[jnp.Array, jnp.Array]:
     """
     Compute the 1D marginal probability distribution function of the input tensor based
     on the number of histogram bins.
@@ -29,14 +29,14 @@ def _kde_marginal_pdf(
         :math:`(B, N, N_{bins})`.
     """
 
-    if not isinstance(values, torch.Tensor):
-        raise TypeError(f"Input values type is not a torch.Tensor. Got {type(values)}")
+    if not isinstance(values, jnp.Array):
+        raise TypeError(f"Input values type is not a jnp.Array. Got {type(values)}")
 
-    if not isinstance(bins, torch.Tensor):
-        raise TypeError(f"Input bins type is not a torch.Tensor. Got {type(bins)}")
+    if not isinstance(bins, jnp.Array):
+        raise TypeError(f"Input bins type is not a jnp.Array. Got {type(bins)}")
 
-    if not isinstance(sigma, torch.Tensor):
-        raise TypeError(f"Input sigma type is not a torch.Tensor. Got {type(sigma)}")
+    if not isinstance(sigma, jnp.Array):
+        raise TypeError(f"Input sigma type is not a jnp.Array. Got {type(sigma)}")
 
     if not bins.dim() == 1:
         raise ValueError(
@@ -49,10 +49,10 @@ def _kde_marginal_pdf(
     values = values.unsqueeze(-1)
 
     if weights is None:
-        weights = torch.ones_like(values)
+        weights = jnp.ones_like(values)
     else:
-        if not isinstance(weights, torch.Tensor):
-            raise TypeError(f"Weights type is not a torch.Tensor. Got {type(weights)}")
+        if not isinstance(weights, jnp.Array):
+            raise TypeError(f"Weights type is not a jnp.Array. Got {type(weights)}")
         if weights.shape == values.shape[:-1]:
             weights = weights.unsqueeze(-1)
         if not weights.shape == values.shape:
@@ -63,22 +63,22 @@ def _kde_marginal_pdf(
     residuals = values - bins.repeat(*values.shape)
     kernel_values = (
         weights
-        * torch.exp(-0.5 * (residuals / sigma).pow(2))
-        / torch.sqrt(2 * math.pi * sigma**2)
+        * jnp.exp(-0.5 * (residuals / sigma).pow(2))
+        / jnp.sqrt(2 * math.pi * sigma**2)
     )
 
-    prob_mass = torch.sum(kernel_values, dim=-2)
-    normalization = torch.sum(prob_mass, dim=-1).unsqueeze(-1) + epsilon
+    prob_mass = jnp.sum(kernel_values, dim=-2)
+    normalization = jnp.sum(prob_mass, dim=-1).unsqueeze(-1) + epsilon
     prob_mass = prob_mass / normalization
 
     return prob_mass, kernel_values
 
 
 def _kde_joint_pdf_2d(
-    kernel_values1: torch.Tensor,
-    kernel_values2: torch.Tensor,
-    epsilon: Union[torch.Tensor, float] = 1e-10,
-) -> torch.Tensor:
+    kernel_values1: jnp.Array,
+    kernel_values2: jnp.Array,
+    epsilon: Union[jnp.Array, float] = 1e-10,
+) -> jnp.Array:
     """
     Compute the joint probability distribution function of the input tensors based on
     the number of histogram bins.
@@ -90,22 +90,21 @@ def _kde_joint_pdf_2d(
         shape :math:`(B, N_{bins}, N_{bins})`.
     """
 
-    if not isinstance(kernel_values1, torch.Tensor):
+    if not isinstance(kernel_values1, jnp.Array):
         raise TypeError(
-            "Input kernel_values1 type is not a torch.Tensor."
+            "Input kernel_values1 type is not a jnp.Array."
             + f"Got {type(kernel_values1)}"
         )
 
-    if not isinstance(kernel_values2, torch.Tensor):
+    if not isinstance(kernel_values2, jnp.Array):
         raise TypeError(
-            "Input kernel_values2 type is not a torch.Tensor."
+            "Input kernel_values2 type is not a jnp.Array."
             + f"Got {type(kernel_values2)}"
         )
 
-    joint_kernel_values = torch.matmul(kernel_values1.transpose(-2, -1), kernel_values2)
+    joint_kernel_values = jnp.matmul(kernel_values1.transpose(-2, -1), kernel_values2)
     normalization = (
-        torch.sum(joint_kernel_values, dim=(-2, -1)).unsqueeze(-1).unsqueeze(-1)
-        + epsilon
+        jnp.sum(joint_kernel_values, dim=(-2, -1)).unsqueeze(-1).unsqueeze(-1) + epsilon
     )
     pdf = joint_kernel_values / normalization
 
@@ -113,12 +112,12 @@ def _kde_joint_pdf_2d(
 
 
 def kde_histogram_1d(
-    x: torch.Tensor,
-    bins: torch.Tensor,
-    bandwidth: torch.Tensor,
-    weights: Optional[torch.Tensor] = None,
-    epsilon: Union[torch.Tensor, float] = 1e-10,
-) -> torch.Tensor:
+    x: jnp.Array,
+    bins: jnp.Array,
+    bandwidth: jnp.Array,
+    weights: Optional[jnp.Array] = None,
+    epsilon: Union[jnp.Array, float] = 1e-10,
+) -> jnp.Array:
     """
     Estimate the histogram using KDE of the input tensor.
 
@@ -133,11 +132,11 @@ def kde_histogram_1d(
     :return: Computed 1d histogram of shape :math:`(B, N_{bins})`.
 
     Examples:
-        >>> x = torch.rand(1, 10)
-        >>> bins = torch.torch.linspace(0, 255, 128)
-        >>> hist = kde_histogram_1d(x, bins, bandwidth=torch.tensor(0.9))
+        >>> x = jnp.rand(1, 10)
+        >>> bins = jnp.jnp.linspace(0, 255, 128)
+        >>> hist = kde_histogram_1d(x, bins, bandwidth=jnp.tensor(0.9))
         >>> hist.shape
-        torch.Size([1, 128])
+        jnp.Size([1, 128])
     """
 
     pdf, _ = _kde_marginal_pdf(
@@ -152,14 +151,14 @@ def kde_histogram_1d(
 
 
 def kde_histogram_2d(
-    x1: torch.Tensor,
-    x2: torch.Tensor,
-    bins1: torch.Tensor,
-    bins2: torch.Tensor,
-    bandwidth: torch.Tensor,
-    weights: Optional[torch.Tensor] = None,
-    epsilon: Union[float, torch.Tensor] = 1e-10,
-) -> torch.Tensor:
+    x1: jnp.Array,
+    x2: jnp.Array,
+    bins1: jnp.Array,
+    bins2: jnp.Array,
+    bandwidth: jnp.Array,
+    weights: Optional[jnp.Array] = None,
+    epsilon: Union[float, jnp.Array] = 1e-10,
+) -> jnp.Array:
     """
     Estimate the 2D histogram of the input tensor.
 
@@ -177,12 +176,12 @@ def kde_histogram_2d(
     :return: Computed histogram of shape :math:`(B, N_{bins}, N_{bins})`.
 
     Examples:
-        >>> x1 = torch.rand(2, 32)
-        >>> x2 = torch.rand(2, 32)
-        >>> bins = torch.torch.linspace(0, 255, 128)
-        >>> hist = kde_histogram_2d(x1, x2, bins, bandwidth=torch.tensor(0.9))
+        >>> x1 = jnp.rand(2, 32)
+        >>> x2 = jnp.rand(2, 32)
+        >>> bins = jnp.jnp.linspace(0, 255, 128)
+        >>> hist = kde_histogram_2d(x1, x2, bins, bandwidth=jnp.tensor(0.9))
         >>> hist.shape
-        torch.Size([2, 128, 128])
+        jnp.Size([2, 128, 128])
     """
 
     _, kernel_values1 = _kde_marginal_pdf(

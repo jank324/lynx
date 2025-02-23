@@ -1,5 +1,5 @@
+import jax.numpy as jnp
 import pytest
-import torch
 
 import lynx
 
@@ -12,8 +12,8 @@ def test_assert_ei_greater_zero():
        1127 Ef = (energy + delta_energy) / electron_mass_eV
        1128 Ep = (Ef - Ei) / self.length  # Derivative of the energy
     -> 1129 assert Ei > 0, "Initial energy must be larger than 0"
-       1131 alpha = torch.sqrt(eta / 8) / torch.cos(phi) * torch.log(Ef / Ei)
-       1133 r11 = torch.cos(alpha) - torch.sqrt(2 / eta) * torch.cos(phi) * torch.sin(alpha)   # noqa: E501
+       1131 alpha = jnp.sqrt(eta / 8) / jnp.cos(phi) * jnp.log(Ef / Ei)
+       1133 r11 = jnp.cos(alpha) - jnp.sqrt(2 / eta) * jnp.cos(phi) * jnp.sin(alpha)   # noqa: E501
 
     RuntimeError: Boolean value of Tensor with more than one value is ambiguous
     ```
@@ -25,8 +25,8 @@ def test_assert_ei_greater_zero():
         frequency=jnp.array([2.8560e09, 2.8560e09, 2.8560e09]),
         name="k26_2a",
     )
-    beam = cheetah.ParticleBeam.from_parameters(
-        num_particles=100_000, sigma_x=torch.tensor(1e-5)
+    beam = lynx.ParticleBeam.from_parameters(
+        num_particles=100_000, sigma_x=jnp.asarray(1e-5)
     )
 
     _ = cavity.track(beam)
@@ -34,7 +34,7 @@ def test_assert_ei_greater_zero():
 
 @pytest.mark.parametrize(
     "voltage",
-    [torch.tensor([0.0, 0.0]), torch.tensor([0.0, 1e6]), torch.tensor([1e6, 1e6])],
+    [jnp.asarray([0.0, 0.0]), jnp.asarray([0.0, 1e6]), jnp.asarray([1e6, 1e6])],
 )
 def test_vectorized_cavity_zero_voltage(voltage):
     """
@@ -46,35 +46,35 @@ def test_vectorized_cavity_zero_voltage(voltage):
     of zero voltage. The latter produced NaNs in the transfer matrix when the voltage
     is zero.
     """
-    cavity = cheetah.Cavity(
-        length=torch.tensor([3.0441, 3.0441]),
+    cavity = lynx.Cavity(
+        length=jnp.asarray([3.0441, 3.0441]),
         voltage=voltage,
-        phase=torch.tensor([-0.0, -0.0]),
-        frequency=torch.tensor([2.8560e09, 2.8560e09]),
+        phase=jnp.asarray([-0.0, -0.0]),
+        frequency=jnp.asarray([2.8560e09, 2.8560e09]),
         name="k27_1a",
-        dtype=torch.float64,
+        dtype=jnp.float64,
     )
-    incoming = cheetah.ParameterBeam.from_parameters(
-        mu_x=torch.tensor(0.0),
-        mu_px=torch.tensor(0.0),
-        mu_y=torch.tensor(0.0),
-        mu_py=torch.tensor(0.0),
-        sigma_x=torch.tensor(4.8492e-06),
-        sigma_px=torch.tensor(1.5603e-07),
-        sigma_y=torch.tensor(4.1209e-07),
-        sigma_py=torch.tensor(1.1035e-08),
-        sigma_tau=torch.tensor(1.0000e-10),
-        sigma_p=torch.tensor(1.0000e-06),
-        energy=torch.tensor(8.0000e09),
-        total_charge=torch.tensor(0.0),
-        dtype=torch.float64,
+    incoming = lynx.ParameterBeam.from_parameters(
+        mu_x=jnp.asarray(0.0),
+        mu_px=jnp.asarray(0.0),
+        mu_y=jnp.asarray(0.0),
+        mu_py=jnp.asarray(0.0),
+        sigma_x=jnp.asarray(4.8492e-06),
+        sigma_px=jnp.asarray(1.5603e-07),
+        sigma_y=jnp.asarray(4.1209e-07),
+        sigma_py=jnp.asarray(1.1035e-08),
+        sigma_tau=jnp.asarray(1.0000e-10),
+        sigma_p=jnp.asarray(1.0000e-06),
+        energy=jnp.asarray(8.0000e09),
+        total_charge=jnp.asarray(0.0),
+        dtype=jnp.float64,
     )
 
     outgoing = cavity.track(incoming)
 
-    assert not torch.isnan(cavity.transfer_map(incoming.energy)).any()
+    assert not jnp.isnan(cavity.transfer_map(incoming.energy)).any()
 
-    assert not torch.isnan(outgoing.sigma_x).any()
-    assert not torch.isnan(outgoing.sigma_y).any()
-    assert not torch.isnan(outgoing.beta_x).any()
-    assert not torch.isnan(outgoing.beta_y).any()
+    assert not jnp.isnan(outgoing.sigma_x).any()
+    assert not jnp.isnan(outgoing.sigma_y).any()
+    assert not jnp.isnan(outgoing.beta_x).any()
+    assert not jnp.isnan(outgoing.beta_y).any()

@@ -1,14 +1,14 @@
-.. Cheetah documentation master file, created by
+.. Lynx documentation master file, created by
    sphinx-quickstart on Fri May 19 10:20:01 2023.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Cheetah's documentation!
+Welcome to Lynx's documentation!
 ===================================
 
-`Cheetah <https://github.com/desy-ml/cheetah>`_ is a particle tracking accelerator we built specifically to speed up the training of reinforcement learning models.
+`Lynx <https://github.com/jank324/lynx>`_ is a particle tracking accelerator we built specifically to speed up the training of reinforcement learning models.
 
-GitHub repository: https://github.com/desy-ml/cheetah
+GitHub repository: https://github.com/jank324/lynx
 
 Paper: https://doi.org/10.1103/PhysRevAccelBeams.27.054601
 
@@ -16,17 +16,17 @@ Paper: https://doi.org/10.1103/PhysRevAccelBeams.27.054601
 Installation
 ------------
 
-Simply install *Cheetah* from PyPI by running the following command.
+Simply install *Lynx* from PyPI by running the following command.
 
 .. code-block:: bash
 
-    pip install cheetah-accelerator
+    pip install lynx-accelerator
 
 
 Examples
 --------
 
-We provide some examples to demonstrate some features of *Cheetah* and show how to use them. They provide a good entry point to using *Cheetah*, but they do not represent its full functionality. To move beyond the examples, please refer to the in-depth documentation. If you feel like other examples should be added, feel free to open an issue on GitHub.
+We provide some examples to demonstrate some features of *Lynx* and show how to use them. They provide a good entry point to using *Lynx*, but they do not represent its full functionality. To move beyond the examples, please refer to the in-depth documentation. If you feel like other examples should be added, feel free to open an issue on GitHub.
 
 .. toctree::
     :maxdepth: 2
@@ -40,7 +40,7 @@ We provide some examples to demonstrate some features of *Cheetah* and show how 
 Getting Started
 ---------------
 
-These pages explain how to get started with *Cheetah*.
+These pages explain how to get started with *Lynx*.
 
 .. toctree::
     :maxdepth: 1
@@ -65,10 +65,10 @@ For more advanced usage, please refer to the in-depth documentation.
     utils
 
 
-Cite Cheetah
+Cite Lynx
 ------------
 
-If you use Cheetah, please cite the following two papers:
+If you use Lynx, please cite the following two papers:
 
 .. code-block:: bibtex
 
@@ -99,7 +99,7 @@ For Developers
 
 Activate your virtual environment. (Optional)
 
-Install the cheetah package as editable
+Install the `lynx` package as editable
 
 .. code-block:: sh
 
@@ -139,35 +139,35 @@ Institutions
 
 The development of Cheetah is a joint effort by members of the following institutions:
 
-.. image:: https://github.com/desy-ml/cheetah/raw/master/images/desy.png
+.. image:: https://github.com/desy-ml/lynx/raw/master/images/desy.png
     :alt: DESY
     :width: 5em
 
-.. image:: https://github.com/desy-ml/cheetah/raw/master/images/kit.png
+.. image:: https://github.com/desy-ml/lynx/raw/master/images/kit.png
     :alt: KIT
     :width: 7em
 
-.. image:: https://github.com/desy-ml/cheetah/raw/master/images/lbnl.png
+.. image:: https://github.com/desy-ml/lynx/raw/master/images/lbnl.png
     :alt: LBNL
     :width: 11em
 
-.. image:: https://github.com/desy-ml/cheetah/raw/master/images/university_of_chicago.png
+.. image:: https://github.com/desy-ml/lynx/raw/master/images/university_of_chicago.png
     :alt: University of Chicago
     :width: 11em
 
-.. image:: https://github.com/desy-ml/cheetah/raw/master/images/slac.png
+.. image:: https://github.com/desy-ml/lynx/raw/master/images/slac.png
     :alt: SLAC
     :width: 9em
 
-.. image:: https://github.com/desy-ml/cheetah/raw/master/images/university_of_liverpool.png
+.. image:: https://github.com/desy-ml/lynx/raw/master/images/university_of_liverpool.png
     :alt: University of Liverpool
     :width: 10em
 
-.. image:: https://github.com/desy-ml/cheetah/raw/master/images/cockcroft.png
+.. image:: https://github.com/desy-ml/lynx/raw/master/images/cockcroft.png
     :alt: Cockcroft Institute
     :width: 7em
 
-.. image:: https://github.com/desy-ml/cheetah/raw/master/images/tuhh.png
+.. image:: https://github.com/desy-ml/lynx/raw/master/images/tuhh.png
     :alt: Hamburg University of Technology
     :width: 5em
 

@@ -12,7 +12,7 @@ def feature2nontorch(value: Any) -> Any:
     that can be saved to LatticeJSON.
 
     :param value: Value of the feature that might be in some kind of PyTorch format,
-        such as `torch.Tensor` or `torch.nn.Parameter`.
+        such as `jnp.Array` or `jnp.nn.Parameter`.
     :return: Value of the feature if it is not in a PyTorch format, otherwise the
         value converted to a non-PyTorch format.
     """
@@ -23,7 +23,7 @@ def convert_element(element: "lynx.Element"):
     """
     Deconstruct an element into its name, class and parameters for saving to JSON.
 
-    :param element: Cheetah element
+    :param element: Lynx element
     :return: Tuple of element name, element class, and element parameters
     """
     params = {
@@ -40,7 +40,7 @@ def convert_segment(segment: "lynx.Segment") -> Tuple[dict, dict]:
     Deconstruct a segment into its name, a list of its elements and a dictionary of
     its element parameters for saving to JSON.
 
-    :param segment: Cheetah segment.
+    :param segment: Lynx segment.
     :return: Tuple of elments and lattices dictionaries found in segment, including
         the segment itself.
     """
@@ -67,17 +67,17 @@ def convert_segment(segment: "lynx.Segment") -> Tuple[dict, dict]:
     return elements, lattices
 
 
-def save_cheetah_model(
+def save_lynx_model(
     segment: "lynx.Segment",
     filename: str,
     title: Optional[str] = None,
     info: str = "This is a placeholder lattice description",
 ) -> None:
     """
-    Save a cheetah model to json file accoding to the lattice-json convention
+    Save a Lynx model to json file accoding to the lattice-json convention
     c.f. https://github.com/nobeam/latticejson
 
-    :param segment: Cheetah `Segment` to save.
+    :param segment: Lynx `Segment` to save.
     :param filename: Name/path of the file to save the lattice to.
     :param title: Title of the lattice. If not provided, defaults to the name of the
         `Segment` object. If that also does not have a name, defaults to "Unnamed
@@ -89,7 +89,7 @@ def save_cheetah_model(
         title = segment.name if segment.name is not None else "Unnamed Lattice"
 
     metadata = {
-        "version": "cheetah-0.7",
+        "version": "lynx-0.7",
         "title": title,
         "info": info,
         "root": segment.name if segment.name is not None else "cell",
@@ -129,14 +129,14 @@ class CompactJSONEncoder(json.JSONEncoder):
 
 def nontorch2feature(value: Any) -> Any:
     """
-    Convert a value like a `float`, `int`, etc. to a `torch.Tensor` if necessary.
+    Convert a value like a `float`, `int`, etc. to a `jnp.Array` if necessary.
     Values of type `str` and `bool` are not converted, because all currently existing
-    `cheetah.Element` subclasses expect these values to not be of type `torch.Tensor`.
+    `lynx.Element` subclasses expect these values to not be of type `jnp.Array`.
 
-    :param value: Value to convert to a `torch.Tensor` if necessary.
-    :return: Value converted to a `torch.Tensor` if necessary.
+    :param value: Value to convert to a `jnp.Array` if necessary.
+    :return: Value converted to a `jnp.Array` if necessary.
     """
-    return value if isinstance(value, (str, bool)) else torch.tensor(value)
+    return value if isinstance(value, (str, bool)) else jnp.asarray(value)
 
 
 def parse_element(name: str, lattice_dict: dict) -> "lynx.Element":
@@ -175,12 +175,12 @@ def parse_segment(name: str, lattice_dict: dict) -> "lynx.Segment":
     return lynx.Segment(elements=elements, name=name)
 
 
-def load_cheetah_model(filename: str) -> "lynx.Segment":
+def load_lynx_model(filename: str) -> "lynx.Segment":
     """
-    Load a Cheetah model from a JSON file.
+    Load a Lynx model from a JSON file.
 
     :param filename: Name/path of the file to load the lattice from.
-    :return: Loaded Cheetah `Segment`.
+    :return: Loaded Lynx `Segment`.
     """
     with open(filename, "r") as f:
         lattice_dict = json.load(f)

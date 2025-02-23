@@ -6,9 +6,9 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
-from cheetah.accelerator.element import Element
-from cheetah.particles import Beam, ParticleBeam
-from cheetah.utils import UniqueNameGenerator, verify_device_and_dtype
+from lynx.accelerator.element import Element
+from lynx.particles import Beam, ParticleBeam
+from lynx.utils import UniqueNameGenerator, verify_device_and_dtype
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
@@ -29,8 +29,8 @@ class Aperture(Element):
 
     def __init__(
         self,
-        x_max: Optional[torch.Tensor] = None,
-        y_max: Optional[torch.Tensor] = None,
+        x_max: Optional[jnp.Array] = None,
+        y_max: Optional[jnp.Array] = None,
         shape: Literal["rectangular", "elliptical"] = "rectangular",
         is_active: bool = True,
         name: Optional[str] = None,
@@ -41,13 +41,13 @@ class Aperture(Element):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name, **factory_kwargs)
 
-        self.register_buffer("x_max", torch.tensor(float("inf"), **factory_kwargs))
-        self.register_buffer("y_max", torch.tensor(float("inf"), **factory_kwargs))
+        self.register_buffer("x_max", jnp.asarray(float("inf"), **factory_kwargs))
+        self.register_buffer("y_max", jnp.asarray(float("inf"), **factory_kwargs))
 
         if x_max is not None:
-            self.x_max = torch.as_tensor(x_max, **factory_kwargs)
+            self.x_max = jnp.as_tensor(x_max, **factory_kwargs)
         if y_max is not None:
-            self.y_max = torch.as_tensor(y_max, **factory_kwargs)
+            self.y_max = jnp.as_tensor(y_max, **factory_kwargs)
 
         self.shape = shape
         self.is_active = is_active
@@ -69,19 +69,19 @@ class Aperture(Element):
         if not (isinstance(incoming, ParticleBeam) and self.is_active):
             return incoming
 
-        assert torch.all(self.x_max >= 0) and torch.all(self.y_max >= 0)
+        assert jnp.all(self.x_max >= 0) and jnp.all(self.y_max >= 0)
         assert self.shape in [
             "rectangular",
             "elliptical",
         ], f"Unknown aperture shape {self.shape}"
 
         if self.shape == "rectangular":
-            survived_mask = torch.logical_and(
-                torch.logical_and(
+            survived_mask = jnp.logical_and(
+                jnp.logical_and(
                     incoming.x > -self.x_max.unsqueeze(-1),
                     incoming.x < self.x_max.unsqueeze(-1),
                 ),
-                torch.logical_and(
+                jnp.logical_and(
                     incoming.y > -self.y_max.unsqueeze(-1),
                     incoming.y < self.y_max.unsqueeze(-1),
                 ),
@@ -101,7 +101,7 @@ class Aperture(Element):
             dtype=incoming.particles.dtype,
         )
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jnp.Array) -> list[Element]:
         # TODO: Implement splitting for aperture properly, for now just return self
         return [self]
 

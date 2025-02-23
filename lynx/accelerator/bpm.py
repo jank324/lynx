@@ -5,9 +5,9 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
-from cheetah.accelerator.element import Element
-from cheetah.particles import Beam, ParameterBeam, ParticleBeam
-from cheetah.utils import UniqueNameGenerator
+from lynx.accelerator.element import Element
+from lynx.particles import Beam, ParameterBeam, ParticleBeam
+from lynx.utils import UniqueNameGenerator
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
@@ -25,14 +25,14 @@ class BPM(Element):
         self,
         is_active: bool = False,
         name: Optional[str] = None,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: Optional[jnp.device] = None,
+        dtype: Optional[jnp.dtype] = None,
     ) -> None:
         super().__init__(name=name, device=device, dtype=dtype)
 
         self.is_active = is_active
         self.register_buffer(
-            "reading", torch.tensor(torch.nan, device=device, dtype=dtype)
+            "reading", jnp.asarray(jnp.nan, device=device, dtype=dtype)
         )
 
     @property
@@ -46,7 +46,7 @@ class BPM(Element):
 
     def track(self, incoming: Beam) -> Beam:
         if isinstance(incoming, ParameterBeam):
-            self.reading = torch.stack([incoming.mu_x, incoming.mu_y])
+            self.reading = jnp.stack([incoming.mu_x, incoming.mu_y])
         elif isinstance(incoming, ParticleBeam):
             self.reading = jnp.stack([incoming.mu_x, incoming.mu_y])
         else:

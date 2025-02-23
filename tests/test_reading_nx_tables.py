@@ -1,6 +1,6 @@
-import torch
+import jax.numpy as jnp
 
-import cheetah
+import lynx
 
 
 def test_no_error():
@@ -24,4 +24,4 @@ def test_length():
     """
     segment = lynx.Segment.from_nx_tables("tests/resources/Stage4v3_9.txt")
 
-    assert torch.allclose(segment.length, torch.tensor(44.2215))
+    assert jnp.allclose(segment.length, jnp.asarray(44.2215))

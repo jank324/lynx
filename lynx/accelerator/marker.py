@@ -3,11 +3,10 @@ from typing import Optional
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 
-from cheetah.accelerator.element import Element
-from cheetah.particles import Beam
-from cheetah.utils import UniqueNameGenerator
+from lynx.accelerator.element import Element
+from lynx.particles import Beam
+from lynx.utils import UniqueNameGenerator
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 

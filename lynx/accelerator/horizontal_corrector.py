@@ -3,11 +3,10 @@ from typing import Optional
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from matplotlib.patches import Rectangle
 
-from cheetah.accelerator.element import Element
-from cheetah.utils import (
+from lynx.accelerator.element import Element
+from lynx.utils import (
     UniqueNameGenerator,
     compute_relativistic_factors,
     verify_device_and_dtype,
@@ -29,8 +28,8 @@ class HorizontalCorrector(Element):
 
     def __init__(
         self,
-        length: torch.Tensor,
-        angle: Optional[torch.Tensor] = None,
+        length: jnp.Array,
+        angle: Optional[jnp.Array] = None,
         name: Optional[str] = None,
         device=None,
         dtype=None,
@@ -39,11 +38,11 @@ class HorizontalCorrector(Element):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name, **factory_kwargs)
 
-        self.register_buffer("angle", torch.tensor(0.0, **factory_kwargs))
+        self.register_buffer("angle", jnp.asarray(0.0, **factory_kwargs))
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.as_tensor(length, **factory_kwargs)
         if angle is not None:
-            self.angle = torch.as_tensor(angle, **factory_kwargs)
+            self.angle = jnp.as_tensor(angle, **factory_kwargs)
 
     def transfer_map(self, energy: jax.Array) -> jax.Array:
         device = self.length.device
@@ -51,11 +50,11 @@ class HorizontalCorrector(Element):
 
         _, igamma2, beta = compute_relativistic_factors(energy)
 
-        vector_shape = torch.broadcast_shapes(
+        vector_shape = jnp.broadcast_shapes(
             self.length.shape, igamma2.shape, self.angle.shape
         )
 
-        tm = torch.eye(7, device=device, dtype=dtype).repeat((*vector_shape, 1, 1))
+        tm = jnp.eye(7, device=device, dtype=dtype).repeat((*vector_shape, 1, 1))
         tm[..., 0, 1] = self.length
         tm[..., 1, 6] = self.angle
         tm[..., 2, 3] = self.length
@@ -69,10 +68,10 @@ class HorizontalCorrector(Element):
 
     @property
     def is_active(self) -> bool:
-        return torch.any(self.angle != 0)
+        return jnp.any(self.angle != 0)
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
-        num_splits = torch.ceil(torch.max(self.length) / resolution).int()
+    def split(self, resolution: jnp.Array) -> list[Element]:
+        num_splits = jnp.ceil(jnp.max(self.length) / resolution).int()
         return [
             HorizontalCorrector(
                 self.length / num_splits,
@@ -89,7 +88,7 @@ class HorizontalCorrector(Element):
         plot_angle = self.angle[vector_idx] if self.angle.dim() > 0 else self.angle
 
         alpha = 1 if self.is_active else 0.2
-        height = 0.8 * (torch.sign(plot_angle) if self.is_active else 1)
+        height = 0.8 * (jnp.sign(plot_angle) if self.is_active else 1)
 
         patch = Rectangle(
             (plot_s, 0), plot_length, height, color="tab:blue", alpha=alpha, zorder=2

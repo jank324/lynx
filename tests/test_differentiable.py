@@ -1,5 +1,5 @@
+import jax.numpy as jnp
 import pytest
-import torch
 from torch import nn
 
 import lynx
@@ -14,13 +14,13 @@ def test_simple_quadrupole():
     """
     segment = lynx.Segment(
         [
-            cheetah.Drift(length=torch.tensor(1.0)),
-            cheetah.Quadrupole(
-                length=torch.tensor(0.2),
-                k1=nn.Parameter(torch.tensor(3.142)),
+            lynx.Drift(length=jnp.asarray(1.0)),
+            lynx.Quadrupole(
+                length=jnp.asarray(0.2),
+                k1=nn.Parameter(jnp.asarray(3.142)),
                 name="my_quad",
             ),
-            cheetah.Drift(length=torch.tensor(1.0)),
+            lynx.Drift(length=jnp.asarray(1.0)),
         ]
     )
     incoming_beam = lynx.ParticleBeam.from_astra(
@@ -98,16 +98,16 @@ def test_ea_incoming_particle_beam():
 @pytest.mark.parametrize(
     "ElementClass",
     [
-        cheetah.Cavity,
-        cheetah.Dipole,
-        cheetah.Drift,
-        cheetah.HorizontalCorrector,
-        cheetah.Quadrupole,
-        cheetah.RBend,
-        cheetah.Solenoid,
-        cheetah.TransverseDeflectingCavity,
-        cheetah.Undulator,
-        cheetah.VerticalCorrector,
+        lynx.Cavity,
+        lynx.Dipole,
+        lynx.Drift,
+        lynx.HorizontalCorrector,
+        lynx.Quadrupole,
+        lynx.RBend,
+        lynx.Solenoid,
+        lynx.TransverseDeflectingCavity,
+        lynx.Undulator,
+        lynx.VerticalCorrector,
     ],
 )
 def test_nonleaf_tracking(ElementClass):
@@ -115,20 +115,18 @@ def test_nonleaf_tracking(ElementClass):
     Test that a beam with non-leaf tensors as elements can be tracked through elements
     with length parameter.
     """
-    beam = cheetah.ParticleBeam.from_parameters()
+    beam = lynx.ParticleBeam.from_parameters()
 
-    segment = cheetah.Segment(
+    segment = lynx.Segment(
         elements=[
-            cheetah.Drift(length=torch.tensor(1.0, requires_grad=True)),
-            ElementClass(length=torch.tensor(2.0)),
+            lynx.Drift(length=jnp.asarray(1.0, requires_grad=True)),
+            ElementClass(length=jnp.asarray(2.0)),
         ]
     )
     segment.track(beam)
 
 
-@pytest.mark.parametrize(
-    "ElementClass", [cheetah.Aperture, cheetah.BPM, cheetah.Screen]
-)
+@pytest.mark.parametrize("ElementClass", [lynx.Aperture, lynx.BPM, lynx.Screen])
 def test_nonleaf_lenghtless_elements(ElementClass):
     """
     Test that a beam with non-leaf tensors as elements can be tracked through elements
@@ -138,11 +136,11 @@ def test_nonleaf_lenghtless_elements(ElementClass):
     for all element classes. Some require a length, some cannot handle a length
     argument.
     """
-    beam = cheetah.ParticleBeam.from_parameters()
+    beam = lynx.ParticleBeam.from_parameters()
 
-    segment = cheetah.Segment(
+    segment = lynx.Segment(
         elements=[
-            cheetah.Drift(length=torch.tensor(1.0, requires_grad=True)),
+            lynx.Drift(length=jnp.asarray(1.0, requires_grad=True)),
             ElementClass(is_active=True),
         ]
     )
@@ -151,19 +149,19 @@ def test_nonleaf_lenghtless_elements(ElementClass):
 
 def test_parameters_at_initialization():
     """
-    Test that passing a `torch.nn.Parameter` at initialization registeres the parameter
+    Test that passing a `jnp.nn.Parameter` at initialization registeres the parameter
     in the same way as an assignment after initialization.
     """
-    dipole_with_buffer = cheetah.Dipole(length=torch.tensor(1.0))
+    dipole_with_buffer = lynx.Dipole(length=jnp.asarray(1.0))
 
     # Dipole with buffer (without parameter) should not have any parameters
     assert len(list(dipole_with_buffer.parameters())) == 0
 
     # Create two dipoles with the same parameter, one passed at initialization and one
     # assigned after initialization.
-    parameter = torch.nn.Parameter(torch.tensor(0.2))
-    dipole_initial = cheetah.Dipole(length=torch.tensor(1.0), angle=parameter)
-    dipole_assigned = cheetah.Dipole(length=torch.tensor(1.0))
+    parameter = jnp.nn.Parameter(jnp.asarray(0.2))
+    dipole_initial = lynx.Dipole(length=jnp.asarray(1.0), angle=parameter)
+    dipole_assigned = lynx.Dipole(length=jnp.asarray(1.0))
     dipole_assigned.angle = parameter
 
     # Both dipoles should have the same parameter (the originally passed one and one in

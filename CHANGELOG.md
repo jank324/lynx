@@ -45,7 +45,7 @@ We are proud to announce this new major release of Cheetah! This is probably the
 - The fifth particle coordinate `s` is renamed to `tau`. Now Cheetah uses the canonical variables in phase space $(x,px=\frac{P_x}{p_0},y,py, \tau=c\Delta t, \delta=\Delta E/{p_0 c})$. In addition, the trailing "s" was removed from some beam property names (e.g. `beam.xs` becomes `beam.x`). (see #163, #284) (@cr-xu, @Hespe)
 - `Screen` no longer blocks the beam (by default). To return to old behaviour, set `Screen.is_blocking = True`. (see #208) (@jank324, @roussel-ryan)
 - The way `dtype`s are determined is now more in line with PyTorch's conventions. This may cause different-than-expected `dtype`s in old code. (see #254) (@Hespe, @jank324)
-- `Beam.parameters()` no longer shadows `torch.nn.Module.parameters()`. The previously returned properties now need to be queried individually. (see #300) (@Hespe)
+- `Beam.parameters()` no longer shadows `jnp.nn.Module.parameters()`. The previously returned properties now need to be queried individually. (see #300) (@Hespe)
 - `e1` and `e2` in `Dipole` and `RBend` have been renamed and made more consistent between the different magnet types. They now have prefixes `dipole_` and `rbend_` respectively. (see #289) (@Hespe, @jank324)
 - The `_transfer_map` property of `CustomTransferMap` has been renamed to `predefined_transfer_map`. (see #289) (@Hespe, @jank324)
 
@@ -55,9 +55,9 @@ We are proud to announce this new major release of Cheetah! This is probably the
 - Add a new class method for `ParticleBeam` to generate a 3D uniformly distributed ellipsoidal beam (see #146) (@cr-xu, @jank324)
 - Add Python 3.12 support (see #161) (@jank324)
 - Implement space charge using Green's function in a `SpaceChargeKick` element (see #142) (@greglenerd, @RemiLehe, @ax3l, @cr-xu, @jank324)
-- `Segment`s can now be imported from Bmad to devices other than `torch.device("cpu")` and dtypes other than `torch.float32` (see #196, #206) (@jank324)
+- `Segment`s can now be imported from Bmad to devices other than `jnp.device("cpu")` and dtypes other than `jnp.float32` (see #196, #206) (@jank324)
 - `Screen` now offers the option to use KDE for differentiable images (see #200) (@cr-xu, @roussel-ryan)
-- Moving `Element`s and `Beam`s to a different `device` and changing their `dtype` like with any `torch.nn.Module` is now possible (see #209) (@jank324)
+- Moving `Element`s and `Beam`s to a different `device` and changing their `dtype` like with any `jnp.nn.Module` is now possible (see #209) (@jank324)
 - `Quadrupole` now supports tracking with Cheetah's matrix-based method or with Bmad's more accurate method (see #153) (@jp-ga, @jank324)
 - Port Bmad-X tracking methods to Cheetah for `Quadrupole`, `Drift`, and `Dipole` (see #153, #240) (@jp-ga, @jank324)
 - Add `TransverseDeflectingCavity` element (following the Bmad-X implementation) (see #240, #278 #296) (@jp-ga, @cr-xu, @jank324)
@@ -68,7 +68,7 @@ We are proud to announce this new major release of Cheetah! This is probably the
 
 ### 🐛 Bug fixes
 
-- Now all `Element` have a default length of `torch.zeros((1))`, fixing occasional issues with using elements without length, such as `Marker`, `BPM`, `Screen`, and `Aperture`. (see #143) (@cr-xu)
+- Now all `Element` have a default length of `jnp.zeros((1))`, fixing occasional issues with using elements without length, such as `Marker`, `BPM`, `Screen`, and `Aperture`. (see #143) (@cr-xu)
 - Fix bug in `Cavity` `_track_beam` (see #150) (@jp-ga)
 - Fix issue where dipoles would not get a unique name by default (see #186) (@Hespe)
 - Add `name` to `Drift` element `__repr__` (see #201) (@ansantam)
@@ -79,8 +79,8 @@ We are proud to announce this new major release of Cheetah! This is probably the
 - Fix NumPy 2 compatibility issues with PyTorch on Windows (see #220, #242) (@Hespe)
 - Fix issue with Dipole hgap conversion in Bmad import (see #261) (@cr-xu)
 - Fix plotting for segments that contain tensors with `require_grad=True` (see #288) (@Hespe)
-- Fix bug where `Element.length` could not be set as a `torch.nn.Parameter` (see #301) (@jank324, @Hespe)
-- Fix registration of `torch.nn.Parameter` at initilization for elements and beams (see #303) (@Hespe)
+- Fix bug where `Element.length` could not be set as a `jnp.nn.Parameter` (see #301) (@jank324, @Hespe)
+- Fix registration of `jnp.nn.Parameter` at initilization for elements and beams (see #303) (@Hespe)
 - Fix warnings about NumPy deprecations and unintentional tensor clones (see #308) (@Hespe)
 
 ### 🐆 Other
@@ -161,9 +161,9 @@ We are proud to announce this new major release of Cheetah! This is probably the
 
 ### 🚨 Breaking Changes
 
-- Cheetah elements are now subclasses of `torch.nn.Module`, where the parameters should always be `torch.Tensor`. This makes cheetah a _fully differentiable simulation code_. (see #11)
+- Cheetah elements are now subclasses of `jnp.nn.Module`, where the parameters should always be `jnp.Array`. This makes cheetah a _fully differentiable simulation code_. (see #11)
 - The `cell` keyword argument of `cheetah.Segment` has been renamed to `elements`.
-- Element and beam parameters must now always be passed to the constructor or set afterwards as a `torch.Tensor`. It is no longer possible to use `float`, `int` or `np.ndarray`. (see #11)
+- Element and beam parameters must now always be passed to the constructor or set afterwards as a `jnp.Array`. It is no longer possible to use `float`, `int` or `np.ndarray`. (see #11)
 
 ### 🚀 Features
 
@@ -213,7 +213,7 @@ We are proud to announce this new major release of Cheetah! This is probably the
 
 ### 🚀 New Features
 
-- Faster screen reading simulation by using torch.histogramdd()
+- Faster screen reading simulation by using jnp.histogramdd()
 
 ## [v0.5.16](https://github.com/desy-ml/cheetah/releases/tag/v0.5.16) (2023-02-02)
 

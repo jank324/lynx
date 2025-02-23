@@ -10,9 +10,9 @@ def test_no_tracking_error(is_bpm_active, beam_class):
     """Test that tracking a beam through an inactive BPM does not raise an error."""
     segment = lynx.Segment(
         elements=[
-            cheetah.Drift(length=torch.tensor(1.0)),
-            cheetah.BPM(name="my_bpm"),
-            cheetah.Drift(length=torch.tensor(1.0)),
+            lynx.Drift(length=jnp.asarray(1.0)),
+            lynx.BPM(name="my_bpm"),
+            lynx.Drift(length=jnp.asarray(1.0)),
         ],
     )
     beam = beam_class.from_astra("tests/resources/ACHIP_EA1_2021.1351.001")
@@ -24,17 +24,17 @@ def test_no_tracking_error(is_bpm_active, beam_class):
 
 def test_reading_dtype_conversion():
     """Test that a dtype conversion is correctly reflected in the BPM reading."""
-    segment = cheetah.Segment(
+    segment = lynx.Segment(
         elements=[
-            cheetah.Drift(length=torch.tensor(1.0), dtype=torch.float32),
-            cheetah.BPM(name="bpm", is_active=True, dtype=torch.float32),
+            lynx.Drift(length=jnp.asarray(1.0), dtype=jnp.float32),
+            lynx.BPM(name="bpm", is_active=True, dtype=jnp.float32),
         ],
     )
-    beam = cheetah.ParameterBeam.from_parameters(dtype=torch.float32)
-    assert segment.bpm.reading.dtype == torch.float32
+    beam = lynx.ParameterBeam.from_parameters(dtype=jnp.float32)
+    assert segment.bpm.reading.dtype == jnp.float32
 
     segment.track(beam)
-    assert segment.bpm.reading.dtype == torch.float32
+    assert segment.bpm.reading.dtype == jnp.float32
 
     segment = segment.double()
-    assert segment.bpm.reading.dtype == torch.float64
+    assert segment.bpm.reading.dtype == jnp.float64

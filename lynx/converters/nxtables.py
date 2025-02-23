@@ -10,12 +10,12 @@ import lynx
 
 def translate_element(row: list[str], header: list[str]) -> Optional[Dict]:
     """
-    Translate a row of an NX Tables file to a Cheetah `Element`.
+    Translate a row of an NX Tables file to a Lynx `Element`.
 
     :param row: A row of an NX Tables file as a list of column elements.
     :param header: The header row of the NX Tables file as a list of column names.
-    :return: Dictionary of Cheetah `Element` object best representing the row and its
-        center s position if the element is relevant for the Cheetah model, `None`
+    :return: Dictionary of Lynx `Element` object best representing the row and its
+        center s position if the element is relevant for the Lynx model, `None`
         otherwise.
     """
     class_name = row[header.index("CLASS")]
@@ -53,60 +53,60 @@ def translate_element(row: list[str], header: list[str]) -> Optional[Dict]:
         return None
     elif class_name == "MCXG":  # TODO: Check length with Willi
         assert name[6] == "X"
-        horizontal_coil = cheetah.HorizontalCorrector(
-            name=name[:6] + "H" + name[6 + 1 :], length=torch.tensor(5e-05)
+        horizontal_coil = lynx.HorizontalCorrector(
+            name=name[:6] + "H" + name[6 + 1 :], length=jnp.asarray(5e-05)
         )
-        vertical_coil = cheetah.VerticalCorrector(
-            name=name[:6] + "V" + name[6 + 1 :], length=torch.tensor(5e-05)
+        vertical_coil = lynx.VerticalCorrector(
+            name=name[:6] + "V" + name[6 + 1 :], length=jnp.asarray(5e-05)
         )
         element = lynx.Segment(elements=[horizontal_coil, vertical_coil], name=name)
     elif class_name == "BSCX":
         element = lynx.Screen(
             name=name,
             resolution=(2464, 2056),
-            pixel_size=torch.tensor((0.00343e-3, 0.00247e-3)),
+            pixel_size=jnp.asarray((0.00343e-3, 0.00247e-3)),
             binning=1,
         )
     elif class_name == "BSCR":
         element = lynx.Screen(
             name=name,
             resolution=(2448, 2040),
-            pixel_size=torch.tensor([3.5488e-6, 2.5003e-6]),
+            pixel_size=jnp.asarray([3.5488e-6, 2.5003e-6]),
             binning=1,
         )
     elif class_name == "BSCM":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
             resolution=(2448, 2040),
-            pixel_size=torch.tensor([3.5488e-6, 2.5003e-6]),
+            pixel_size=jnp.asarray([3.5488e-6, 2.5003e-6]),
             binning=1,
         )
     elif class_name == "BSCO":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
             resolution=(2448, 2040),
-            pixel_size=torch.tensor([3.5488e-6, 2.5003e-6]),
+            pixel_size=jnp.asarray([3.5488e-6, 2.5003e-6]),
             binning=1,
         )
     elif class_name == "BSCA":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
             resolution=(2448, 2040),
-            pixel_size=torch.tensor([3.5488e-6, 2.5003e-6]),
+            pixel_size=jnp.asarray([3.5488e-6, 2.5003e-6]),
             binning=1,
         )
     elif class_name == "BSCE":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
             resolution=(2464, 2056),
-            pixel_size=torch.tensor((0.00998e-3, 0.00715e-3)),
+            pixel_size=jnp.asarray((0.00998e-3, 0.00715e-3)),
             binning=1,
         )
     elif class_name == "SCRD":
         element = lynx.Screen(  # TODO: Ask for actual parameters
             name=name,
             resolution=(2464, 2056),
-            pixel_size=torch.tensor((0.00998e-3, 0.00715e-3)),
+            pixel_size=jnp.asarray((0.00998e-3, 0.00715e-3)),
             binning=1,
         )
     elif class_name == "BPMG":
@@ -116,57 +116,57 @@ def translate_element(row: list[str], header: list[str]) -> Optional[Dict]:
     elif class_name == "SLHG":
         element = lynx.Aperture(  # TODO: Ask for actual size and shape
             name=name,
-            x_max=torch.tensor(float("inf")),
-            y_max=torch.tensor(float("inf")),
+            x_max=jnp.asarray(float("inf")),
+            y_max=jnp.asarray(float("inf")),
             shape="elliptical",
         )
     elif class_name == "SLHB":
         element = lynx.Aperture(  # TODO: Ask for actual size and shape
             name=name,
-            x_max=torch.tensor(float("inf")),
-            y_max=torch.tensor(float("inf")),
+            x_max=jnp.asarray(float("inf")),
+            y_max=jnp.asarray(float("inf")),
             shape="rectangular",
         )
     elif class_name == "SLHS":
         element = lynx.Aperture(  # TODO: Ask for actual size and shape
             name=name,
-            x_max=torch.tensor(float("inf")),
-            y_max=torch.tensor(float("inf")),
+            x_max=jnp.asarray(float("inf")),
+            y_max=jnp.asarray(float("inf")),
             shape="rectangular",
         )
     elif class_name == "MCHM":
-        element = cheetah.HorizontalCorrector(name=name, length=torch.tensor(0.02))
+        element = lynx.HorizontalCorrector(name=name, length=jnp.asarray(0.02))
     elif class_name == "MCVM":
-        element = cheetah.VerticalCorrector(name=name, length=torch.tensor(0.02))
+        element = lynx.VerticalCorrector(name=name, length=jnp.asarray(0.02))
     elif class_name == "MBHL":
-        element = cheetah.Dipole(name=name, length=torch.tensor(0.322))
+        element = lynx.Dipole(name=name, length=jnp.asarray(0.322))
     elif class_name == "MBHB":
-        element = cheetah.Dipole(name=name, length=torch.tensor(0.22))
+        element = lynx.Dipole(name=name, length=jnp.asarray(0.22))
     elif class_name == "MBHO":
         element = lynx.Dipole(
             name=name,
-            length=torch.tensor(0.43852543421396856),
-            angle=torch.tensor(0.8203047484373349),
-            dipole_e2=torch.tensor(-0.7504915783575616),
+            length=jnp.asarray(0.43852543421396856),
+            angle=jnp.asarray(0.8203047484373349),
+            dipole_e2=jnp.asarray(-0.7504915783575616),
         )
     elif class_name == "MQZM":
-        element = cheetah.Quadrupole(name=name, length=torch.tensor(0.122))
+        element = lynx.Quadrupole(name=name, length=jnp.asarray(0.122))
     elif class_name == "RSBL":
         element = lynx.Cavity(
             name=name,
-            length=torch.tensor(4.139),
-            frequency=torch.tensor(2.998e9),
-            voltage=torch.tensor(76e6),
+            length=jnp.asarray(4.139),
+            frequency=jnp.asarray(2.998e9),
+            voltage=jnp.asarray(76e6),
         )
     elif class_name == "RXBD":
         element = lynx.Cavity(  # TODO: TD? and tilt?
             name=name,
-            length=torch.tensor(1.0),
-            frequency=torch.tensor(11.9952e9),
-            voltage=torch.tensor(0.0),
+            length=jnp.asarray(1.0),
+            frequency=jnp.asarray(11.9952e9),
+            voltage=jnp.asarray(0.0),
         )
     elif class_name == "UNDA":  # TODO: Figure out actual length
-        element = cheetah.Undulator(name=name, length=torch.tensor(0.25))
+        element = lynx.Undulator(name=name, length=jnp.asarray(0.25))
     elif class_name in [
         "SOLG",
         "BCMG",
@@ -206,13 +206,13 @@ def translate_element(row: list[str], header: list[str]) -> Optional[Dict]:
     return {"element": element, "s_position": s_position}
 
 
-def convert_lattice_to_cheetah(filepath: Path) -> "cheetah.Element":
+def convert_lattice_to_lynx(filepath: Path) -> "lynx.Element":
     """
-    Read an NX Tables CSV-like file generated for the ARES lattice into a Cheetah
+    Read an NX Tables CSV-like file generated for the ARES lattice into a Lynx
     `Segment`.
 
     :param filepath: Path to the NX Tables file.
-    :return: Converted Cheetah `Segment`.
+    :return: Converted Lynx `Segment`.
     """
     with open(filepath, "r") as csvfile:
         nx_tables_rows = csv.reader(csvfile, delimiter=",")

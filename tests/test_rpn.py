@@ -1,4 +1,4 @@
-from cheetah.converters.utils import rpn
+from lynx.converters.utils import rpn
 
 
 def test_valid_rpn_expression():
@@ -25,7 +25,7 @@ def test_valid_rpn_expression_with_single_quotes():
 def test_falsely_validated_normal_expression():
     """
     Tests that the expression `"ldsp2h +dldsp17h +lblxsph/2-lbxsph/2"`, which was
-    falsely recognised as a valid RPN expression in a previous version of Cheetah, is
+    falsely recognised as a valid RPN expression in a previous version of Lynx, is
     correctly recognised as invalid.
     """
     expression = "ldsp2h +dldsp17h +lblxsph/2-lbxsph/2"

@@ -7,7 +7,7 @@ electron_mass_eV = physical_constants["electron mass energy equivalent in MeV"][
 
 def from_astrabeam(path: str) -> tuple[np.ndarray, float, np.ndarray]:
     """
-    Read from a ASTRA beam distribution, and prepare for conversion to a Cheetah
+    Read from a ASTRA beam distribution, and prepare for conversion to a Lynx
     ParticleBeam or ParameterBeam.
 
     Adapted from the implementation in Ocelot:

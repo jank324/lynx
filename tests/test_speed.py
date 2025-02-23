@@ -9,15 +9,15 @@ from .resources import ARESlatticeStage3v1_9 as ares
 
 # TODO: Test that Cheeath tracks faster than Ocelot
 def test_tracking_speed():
-    """Really only tests that Cheetah isn't super slow."""
+    """Really only tests that Lynx isn't super slow."""
     cell = lynx.converters.ocelot.subcell_of_ocelot(ares.cell, "AREASOLA1", "AREABSCR1")
     segment = lynx.Segment.from_ocelot(cell)
     segment.AREABSCR1.is_active = True  # Turn screen on and off
 
-    particles = cheetah.ParticleBeam.from_parameters(
-        num_particles=torch.tensor(int(1e5)),
-        sigma_x=torch.tensor(175e-6),
-        sigma_y=torch.tensor(175e-6),
+    particles = lynx.ParticleBeam.from_parameters(
+        num_particles=jnp.asarray(int(1e5)),
+        sigma_x=jnp.asarray(175e-6),
+        sigma_y=jnp.asarray(175e-6),
     )
 
     t1 = time.time()

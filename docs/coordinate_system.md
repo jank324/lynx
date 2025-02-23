@@ -1,6 +1,6 @@
-# Coordinate System in Cheetah
+# Coordinate System in Lynx
 
-In _Cheetah_, the coordinates of the particles are defined by a 7-dimensional vector
+In _Lynx_, the coordinates of the particles are defined by a 7-dimensional vector
 
 $$\vec{x} = (x, px, y, py, \tau, \delta, 1)$$
 
@@ -18,7 +18,7 @@ The phase space coordinates are defined in the curvelinear coordinate system wit
 
 The new variables are
 
-$$ px = P_x / p_0  $$
+$$ px = P_x / p_0 $$
 
 $P_x$ is the horizontal momentum and $p_0$ is the _reference momentum_.
 
@@ -40,7 +40,7 @@ Here, $E$ is the energy of a particle. $E_0$ is the energy of the reference part
 
 The coordinates are identical as the ones used in OCELOT.
 
-Note that in OCELOT the energy has the unit of GeV, while in Cheetah the energy is in eV.
+Note that in OCELOT the energy has the unit of GeV, while in Lynx the energy is in eV.
 
 ### Bmad
 
@@ -50,13 +50,13 @@ The transverse coordinates $(x, px, y, py)$ are identical to the Bmad coordinate
 
 The longitudinal coordinate in Bmad is defined as
 
-$$ z_\text{(Bmad)} = -\beta c \Delta t $$
+$$ z\_\text{(Bmad)} = -\beta c \Delta t $$
 
-$$ \tau_\text{(Cheetah)} = -\frac{1}{\beta} z_\text{(Bmad)} $$
+$$ \tau*\text{(Lynx)} = -\frac{1}{\beta} z*\text{(Bmad)} $$
 
 In Bmad, the sixth dimension (longitudinal momentum) is defined as the momentum offset over the reference momentum
 
-$$ p_{z, \text{(Bmad)}} = \frac{p-p_0}{p_0}$$
+$$ p\_{z, \text{(Bmad)}} = \frac{p-p_0}{p_0}$$
 
 ### Mad-X
 
@@ -64,11 +64,11 @@ $$ p_{z, \text{(Bmad)}} = \frac{p-p_0}{p_0}$$
 
 The longidutinal coordinate has an opposite sign
 
-$$ \tau_\text{(Cheetah)} = - z_\text{(MAD)} $$
+$$ \tau*\text{(Lynx)} = - z*\text{(MAD)} $$
 
 The longitudinal momentum is identical
 
-$$ \delta_\text{(Cheetah)} = p_{t,\text{(MAD)}} $$
+$$ \delta*\text{(Lynx)} = p*{t,\text{(MAD)}} $$
 
 ## Conversion to trace space notation
 

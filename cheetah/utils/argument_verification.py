@@ -1,9 +1,9 @@
 from typing import Optional
 
-import torch
+import jax.numpy as jnp
 
 
-def are_all_the_same_device(tensors: list[torch.Tensor]) -> torch.device:
+def are_all_the_same_device(tensors: list[jnp.Array]) -> jnp.device:
     """
     Determines whether all arguments are on the same device and, if so, returns that
     device. If no arguments are passed, global default PyTorch device is returned.
@@ -13,10 +13,10 @@ def are_all_the_same_device(tensors: list[torch.Tensor]) -> torch.device:
             argument.device == tensors[0].device for argument in tensors
         ), "All tensors must be on the same device."
 
-    return tensors[0].device if len(tensors) > 0 else torch.get_default_device()
+    return tensors[0].device if len(tensors) > 0 else jnp.get_default_device()
 
 
-def are_all_the_same_dtype(tensors: list[torch.Tensor]) -> torch.dtype:
+def are_all_the_same_dtype(tensors: list[jnp.Array]) -> jnp.dtype:
     """
     Determines whether all arguments have the same dtype and, if so, returns that dtype.
     If no arguments are passed, global default PyTorch dtype is returned.
@@ -26,14 +26,14 @@ def are_all_the_same_dtype(tensors: list[torch.Tensor]) -> torch.dtype:
             argument.dtype == tensors[0].dtype for argument in tensors
         ), "All arguments must have the same dtype."
 
-    return tensors[0].dtype if len(tensors) > 0 else torch.get_default_dtype()
+    return tensors[0].dtype if len(tensors) > 0 else jnp.get_default_dtype()
 
 
 def verify_device_and_dtype(
-    tensors: list[Optional[torch.Tensor]],
-    desired_device: Optional[torch.device],
-    desired_dtype: Optional[torch.dtype],
-) -> tuple[torch.device, torch.dtype]:
+    tensors: list[Optional[jnp.Array]],
+    desired_device: Optional[jnp.device],
+    desired_dtype: Optional[jnp.dtype],
+) -> tuple[jnp.device, jnp.dtype]:
     """
     Verifies that a unique device and dtype can be determined from the passed tensors
     and the optional desired device and dtype. If no desired values are requested,

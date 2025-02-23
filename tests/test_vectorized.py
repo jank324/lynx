@@ -1,6 +1,6 @@
+import jax.numpy as jnp
 import numpy as np
 import pytest
-import torch
 
 import lynx
 
@@ -39,7 +39,7 @@ def test_segment_length_shape_2d():
     assert segment.length.shape == (3, 2)
 
 
-@pytest.mark.parametrize("BeamClass", [cheetah.ParticleBeam, cheetah.ParameterBeam])
+@pytest.mark.parametrize("BeamClass", [lynx.ParticleBeam, lynx.ParameterBeam])
 def test_track_quadrupole_shape(BeamClass):
     """
     Test that the shape of a beam tracked through a single quadrupole element matches
@@ -48,11 +48,11 @@ def test_track_quadrupole_shape(BeamClass):
     quadrupole = lynx.Quadrupole(
         length=jnp.array([0.2, 0.25]), k1=jnp.array([4.2, 4.2])
     )
-    incoming = BeamClass.from_parameters(sigma_x=torch.tensor([1e-5, 2e-5]))
+    incoming = BeamClass.from_parameters(sigma_x=jnp.asarray([1e-5, 2e-5]))
 
     outgoing = quadrupole.track(incoming)
 
-    if BeamClass == cheetah.ParticleBeam:
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particles.shape == (2, 100_000, 7)
     assert outgoing.mu_x.shape == (2,)
     assert outgoing.mu_px.shape == (2,)
@@ -64,13 +64,13 @@ def test_track_quadrupole_shape(BeamClass):
     assert outgoing.sigma_py.shape == (2,)
     assert outgoing.sigma_tau.shape == (2,)
     assert outgoing.sigma_p.shape == (2,)
-    assert outgoing.energy.shape == torch.Size([])
-    assert outgoing.total_charge.shape == torch.Size([])
-    if BeamClass == cheetah.ParticleBeam:
+    assert outgoing.energy.shape == jnp.Size([])
+    assert outgoing.total_charge.shape == jnp.Size([])
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particle_charges.shape == (100_000,)
 
 
-@pytest.mark.parametrize("BeamClass", [cheetah.ParticleBeam, cheetah.ParameterBeam])
+@pytest.mark.parametrize("BeamClass", [lynx.ParticleBeam, lynx.ParameterBeam])
 def test_track_quadrupole_shape_2d(BeamClass):
     """
     Test that the shape of a beam tracked through a single quadrupole element matches
@@ -81,12 +81,12 @@ def test_track_quadrupole_shape_2d(BeamClass):
         k1=jnp.array([[4.2, 4.2], [4.3, 4.3], [4.4, 4.4]]),
     )
     incoming = BeamClass.from_parameters(
-        sigma_x=torch.tensor([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]])
+        sigma_x=jnp.asarray([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]])
     )
 
     outgoing = quadrupole.track(incoming)
 
-    if BeamClass == cheetah.ParticleBeam:
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particles.shape == (3, 2, 100_000, 7)
     assert outgoing.mu_x.shape == (3, 2)
     assert outgoing.mu_px.shape == (3, 2)
@@ -98,13 +98,13 @@ def test_track_quadrupole_shape_2d(BeamClass):
     assert outgoing.sigma_py.shape == (3, 2)
     assert outgoing.sigma_tau.shape == (3, 2)
     assert outgoing.sigma_p.shape == (3, 2)
-    assert outgoing.energy.shape == torch.Size([])
-    assert outgoing.total_charge.shape == torch.Size([])
-    if BeamClass == cheetah.ParticleBeam:
+    assert outgoing.energy.shape == jnp.Size([])
+    assert outgoing.total_charge.shape == jnp.Size([])
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particle_charges.shape == (100_000,)
 
 
-@pytest.mark.parametrize("BeamClass", [cheetah.ParticleBeam, cheetah.ParameterBeam])
+@pytest.mark.parametrize("BeamClass", [lynx.ParticleBeam, lynx.ParameterBeam])
 def test_track_segment_shape(BeamClass):
     """
     Test that the shape of a beam tracked through a segment matches the input.
@@ -116,11 +116,11 @@ def test_track_segment_shape(BeamClass):
             lynx.Drift(length=jnp.array([0.4, 0.3])),
         ]
     )
-    incoming = BeamClass.from_parameters(sigma_x=torch.tensor([1e-5, 2e-5]))
+    incoming = BeamClass.from_parameters(sigma_x=jnp.asarray([1e-5, 2e-5]))
 
     outgoing = segment.track(incoming)
 
-    if BeamClass == cheetah.ParticleBeam:
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particles.shape == (2, 100_000, 7)
     assert outgoing.mu_x.shape == (2,)
     assert outgoing.mu_px.shape == (2,)
@@ -132,13 +132,13 @@ def test_track_segment_shape(BeamClass):
     assert outgoing.sigma_py.shape == (2,)
     assert outgoing.sigma_tau.shape == (2,)
     assert outgoing.sigma_p.shape == (2,)
-    assert outgoing.energy.shape == torch.Size([])
-    assert outgoing.total_charge.shape == torch.Size([])
-    if BeamClass == cheetah.ParticleBeam:
+    assert outgoing.energy.shape == jnp.Size([])
+    assert outgoing.total_charge.shape == jnp.Size([])
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particle_charges.shape == (100_000,)
 
 
-@pytest.mark.parametrize("BeamClass", [cheetah.ParticleBeam, cheetah.ParameterBeam])
+@pytest.mark.parametrize("BeamClass", [lynx.ParticleBeam, lynx.ParameterBeam])
 def test_track_particle_segment_shape_2d(BeamClass):
     """
     Test that the shape of a particle beam tracked through a segment matches the input
@@ -155,12 +155,12 @@ def test_track_particle_segment_shape_2d(BeamClass):
         ]
     )
     incoming = BeamClass.from_parameters(
-        sigma_x=torch.tensor([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]])
+        sigma_x=jnp.asarray([[1e-5, 2e-5], [2e-5, 3e-5], [3e-5, 4e-5]])
     )
 
     outgoing = segment.track(incoming)
 
-    if BeamClass == cheetah.ParticleBeam:
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particles.shape == (3, 2, 100_000, 7)
     assert outgoing.mu_x.shape == (3, 2)
     assert outgoing.mu_px.shape == (3, 2)
@@ -172,9 +172,9 @@ def test_track_particle_segment_shape_2d(BeamClass):
     assert outgoing.sigma_py.shape == (3, 2)
     assert outgoing.sigma_tau.shape == (3, 2)
     assert outgoing.sigma_p.shape == (3, 2)
-    assert outgoing.energy.shape == torch.Size([])
-    assert outgoing.total_charge.shape == torch.Size([])
-    if BeamClass == cheetah.ParticleBeam:
+    assert outgoing.energy.shape == jnp.Size([])
+    assert outgoing.total_charge.shape == jnp.Size([])
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particle_charges.shape == (100_000,)
 
 
@@ -183,12 +183,10 @@ def test_enormous_through_ares_ea():
     Test ARES EA with a huge number of settings. This is a stress test and only run
     for `ParameterBeam` because `ParticleBeam` would require a lot of memory.
     """
-    segment = cheetah.Segment.from_ocelot(ares.cell).subcell("AREASOLA1", "AREABSCR1")
-    incoming = cheetah.ParameterBeam.from_astra(
-        "tests/resources/ACHIP_EA1_2021.1351.001"
-    )
+    segment = lynx.Segment.from_ocelot(ares.cell).subcell("AREASOLA1", "AREABSCR1")
+    incoming = lynx.ParameterBeam.from_astra("tests/resources/ACHIP_EA1_2021.1351.001")
 
-    segment.AREAMQZM1.k1 = torch.linspace(-30.0, 30.0, 200_000).repeat(3, 1)
+    segment.AREAMQZM1.k1 = jnp.linspace(-30.0, 30.0, 200_000).repeat(3, 1)
 
     outgoing = segment.track(incoming)
 
@@ -202,28 +200,28 @@ def test_enormous_through_ares_ea():
     assert outgoing.sigma_py.shape == (3, 200_000)
     assert outgoing.sigma_tau.shape == (3, 200_000)
     assert outgoing.sigma_p.shape == (3, 200_000)
-    assert outgoing.energy.shape == torch.Size([])
-    assert outgoing.total_charge.shape == torch.Size([])
+    assert outgoing.energy.shape == jnp.Size([])
+    assert outgoing.total_charge.shape == jnp.Size([])
 
 
-@pytest.mark.parametrize("BeamClass", [cheetah.ParticleBeam, cheetah.ParameterBeam])
+@pytest.mark.parametrize("BeamClass", [lynx.ParticleBeam, lynx.ParameterBeam])
 def test_cavity_with_zero_and_non_zero_voltage(BeamClass):
     """
     Tests that if zero and non-zero voltages are passed to a cavity in a single batch,
     there are no errors. This test does NOT check physical correctness.
     """
-    cavity = cheetah.Cavity(
-        length=torch.tensor(3.0441),
-        voltage=torch.tensor([0.0, 48_198_468.0, 0.0]),
-        phase=torch.tensor(48198468.0),
-        frequency=torch.tensor(2.8560e09),
+    cavity = lynx.Cavity(
+        length=jnp.asarray(3.0441),
+        voltage=jnp.asarray([0.0, 48_198_468.0, 0.0]),
+        phase=jnp.asarray(48198468.0),
+        frequency=jnp.asarray(2.8560e09),
         name="my_test_cavity",
     )
-    incoming = BeamClass.from_parameters(sigma_x=torch.tensor(1e-5))
+    incoming = BeamClass.from_parameters(sigma_x=jnp.asarray(1e-5))
 
     outgoing = cavity.track(incoming)
 
-    if BeamClass == cheetah.ParticleBeam:
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particles.shape == (3, 100_000, 7)
     assert outgoing.mu_x.shape == (3,)
     assert outgoing.mu_px.shape == (3,)
@@ -236,20 +234,20 @@ def test_cavity_with_zero_and_non_zero_voltage(BeamClass):
     assert outgoing.sigma_tau.shape == (3,)
     assert outgoing.sigma_p.shape == (3,)
     assert outgoing.energy.shape == (3,)
-    assert outgoing.total_charge.shape == torch.Size([])
-    if BeamClass == cheetah.ParticleBeam:
+    assert outgoing.total_charge.shape == jnp.Size([])
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particle_charges.shape == (100_000,)
 
 
-@pytest.mark.parametrize("BeamClass", [cheetah.ParticleBeam, cheetah.ParameterBeam])
+@pytest.mark.parametrize("BeamClass", [lynx.ParticleBeam, lynx.ParameterBeam])
 def test_vectorized_undulator(BeamClass):
     """Test that a vectorized `Undulator` is able to track a particle beam."""
-    element = cheetah.Undulator(length=torch.tensor([0.4, 0.7]))
-    incoming = BeamClass.from_parameters(sigma_x=torch.tensor(1e-5))
+    element = lynx.Undulator(length=jnp.asarray([0.4, 0.7]))
+    incoming = BeamClass.from_parameters(sigma_x=jnp.asarray(1e-5))
 
     outgoing = element.track(incoming)
 
-    if BeamClass == cheetah.ParticleBeam:
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particles.shape == (2, 100_000, 7)
     assert outgoing.mu_x.shape == (2,)
     assert outgoing.mu_px.shape == (2,)
@@ -261,23 +259,21 @@ def test_vectorized_undulator(BeamClass):
     assert outgoing.sigma_py.shape == (2,)
     assert outgoing.sigma_tau.shape == (2,)
     assert outgoing.sigma_p.shape == (2,)
-    assert outgoing.energy.shape == torch.Size([])
-    assert outgoing.total_charge.shape == torch.Size([])
-    if BeamClass == cheetah.ParticleBeam:
+    assert outgoing.energy.shape == jnp.Size([])
+    assert outgoing.total_charge.shape == jnp.Size([])
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particle_charges.shape == (100_000,)
 
 
-@pytest.mark.parametrize("BeamClass", [cheetah.ParticleBeam, cheetah.ParameterBeam])
+@pytest.mark.parametrize("BeamClass", [lynx.ParticleBeam, lynx.ParameterBeam])
 def test_vectorized_solenoid(BeamClass):
     """Test that a vectorized `Solenoid` is able to track a particle beam."""
-    element = cheetah.Solenoid(
-        length=torch.tensor([0.4, 0.7]), k=torch.tensor([4.2, 3.1])
-    )
-    incoming = BeamClass.from_parameters(sigma_x=torch.tensor(1e-5))
+    element = lynx.Solenoid(length=jnp.asarray([0.4, 0.7]), k=jnp.asarray([4.2, 3.1]))
+    incoming = BeamClass.from_parameters(sigma_x=jnp.asarray(1e-5))
 
     outgoing = element.track(incoming)
 
-    if BeamClass == cheetah.ParticleBeam:
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particles.shape == (2, 100_000, 7)
     assert outgoing.mu_x.shape == (2,)
     assert outgoing.mu_px.shape == (2,)
@@ -289,26 +285,26 @@ def test_vectorized_solenoid(BeamClass):
     assert outgoing.sigma_py.shape == (2,)
     assert outgoing.sigma_tau.shape == (2,)
     assert outgoing.sigma_p.shape == (2,)
-    assert outgoing.energy.shape == torch.Size([])
-    assert outgoing.total_charge.shape == torch.Size([])
-    if BeamClass == cheetah.ParticleBeam:
+    assert outgoing.energy.shape == jnp.Size([])
+    assert outgoing.total_charge.shape == jnp.Size([])
+    if BeamClass == lynx.ParticleBeam:
         assert outgoing.particle_charges.shape == (100_000,)
 
 
-@pytest.mark.parametrize("BeamClass", [cheetah.ParticleBeam])
+@pytest.mark.parametrize("BeamClass", [lynx.ParticleBeam])
 @pytest.mark.parametrize("method", ["kde"])  # Currently only KDE supports vectorisation
 def test_vectorized_screen_2d(BeamClass, method):
     """
     Test that a vectorized `Screen` is able to track a particle beam and produce a
     reading with 2 vector dimensions.
     """
-    segment = cheetah.Segment(
+    segment = lynx.Segment(
         elements=[
-            cheetah.Drift(length=torch.tensor(1.0)),
-            cheetah.Screen(
+            lynx.Drift(length=jnp.asarray(1.0)),
+            lynx.Screen(
                 resolution=(100, 100),
-                pixel_size=torch.tensor((1e-5, 1e-5)),
-                misalignment=torch.tensor(
+                pixel_size=jnp.asarray((1e-5, 1e-5)),
+                misalignment=jnp.asarray(
                     [
                         [[1e-4, 2e-4], [3e-4, 4e-4], [5e-4, 6e-4]],
                         [[-1e-4, -2e-4], [-3e-4, -4e-4], [-5e-4, -6e-4]],
@@ -321,7 +317,7 @@ def test_vectorized_screen_2d(BeamClass, method):
         ],
         name="my_segment",
     )
-    incoming = BeamClass.from_parameters(sigma_x=torch.tensor(1e-5))
+    incoming = BeamClass.from_parameters(sigma_x=jnp.asarray(1e-5))
 
     _ = segment.track(incoming)
 
@@ -332,16 +328,16 @@ def test_vectorized_screen_2d(BeamClass, method):
 @pytest.mark.parametrize(
     "ElementClass",
     [
-        cheetah.Cavity,
-        cheetah.Dipole,
-        cheetah.Drift,
-        cheetah.HorizontalCorrector,
-        cheetah.Quadrupole,
-        cheetah.RBend,
-        cheetah.Solenoid,
-        cheetah.TransverseDeflectingCavity,
-        cheetah.Undulator,
-        cheetah.VerticalCorrector,
+        lynx.Cavity,
+        lynx.Dipole,
+        lynx.Drift,
+        lynx.HorizontalCorrector,
+        lynx.Quadrupole,
+        lynx.RBend,
+        lynx.Solenoid,
+        lynx.TransverseDeflectingCavity,
+        lynx.Undulator,
+        lynx.VerticalCorrector,
     ],
 )
 def test_drift_broadcasting_two_different_inputs(ElementClass):
@@ -349,10 +345,10 @@ def test_drift_broadcasting_two_different_inputs(ElementClass):
     Test that broadcasting rules are correctly applied to a elements with two different
     input shapes for elements that have a `length` attribute.
     """
-    incoming = cheetah.ParticleBeam.from_parameters(
-        num_particles=100_000, energy=torch.tensor([154e6, 14e9])
+    incoming = lynx.ParticleBeam.from_parameters(
+        num_particles=100_000, energy=jnp.asarray([154e6, 14e9])
     )
-    element = ElementClass(length=torch.tensor([[0.6], [0.5], [0.4]]))
+    element = ElementClass(length=jnp.asarray([[0.6], [0.5], [0.4]]))
 
     outgoing = element.track(incoming)
 
@@ -364,10 +360,10 @@ def test_drift_broadcasting_two_different_inputs(ElementClass):
 @pytest.mark.parametrize(
     "ElementClass",
     [
-        cheetah.Dipole,
-        cheetah.Drift,
-        cheetah.Quadrupole,
-        cheetah.TransverseDeflectingCavity,
+        lynx.Dipole,
+        lynx.Drift,
+        lynx.Quadrupole,
+        lynx.TransverseDeflectingCavity,
     ],
 )
 def test_drift_broadcasting_two_different_inputs_bmadx(ElementClass):
@@ -375,11 +371,11 @@ def test_drift_broadcasting_two_different_inputs_bmadx(ElementClass):
     Test that broadcasting rules are correctly applied to a elements with two different
     input shapes for elements that have a `"bmadx"` tracking method.
     """
-    incoming = cheetah.ParticleBeam.from_parameters(
-        num_particles=100_000, energy=torch.tensor([154e6, 14e9])
+    incoming = lynx.ParticleBeam.from_parameters(
+        num_particles=100_000, energy=jnp.asarray([154e6, 14e9])
     )
     element = ElementClass(
-        tracking_method="bmadx", length=torch.tensor([[0.6], [0.5], [0.4]])
+        tracking_method="bmadx", length=jnp.asarray([[0.6], [0.5], [0.4]])
     )
 
     outgoing = element.track(incoming)
@@ -394,26 +390,26 @@ def test_vectorized_parameter_beam_creation():
     Tests that creating a parameter beam with a few vectorised parameters works as
     expected.
     """
-    beam = cheetah.ParameterBeam.from_parameters(
-        mu_x=torch.tensor([2e-4, 3e-4]), sigma_x=torch.tensor([1e-5, 2e-5])
+    beam = lynx.ParameterBeam.from_parameters(
+        mu_x=jnp.asarray([2e-4, 3e-4]), sigma_x=jnp.asarray([1e-5, 2e-5])
     )
 
     assert beam.mu_x.shape == (2,)
-    assert torch.allclose(beam.mu_x, torch.tensor([2e-4, 3e-4]))
+    assert jnp.allclose(beam.mu_x, jnp.asarray([2e-4, 3e-4]))
     assert beam.sigma_x.shape == (2,)
-    assert torch.allclose(beam.sigma_x, torch.tensor([1e-5, 2e-5]))
+    assert jnp.allclose(beam.sigma_x, jnp.asarray([1e-5, 2e-5]))
 
 
 @pytest.mark.parametrize(
-    "ElementClass", [cheetah.HorizontalCorrector, cheetah.VerticalCorrector]
+    "ElementClass", [lynx.HorizontalCorrector, lynx.VerticalCorrector]
 )
 def test_broadcasting_corrector_angles(ElementClass):
     """Test that broadcasting rules are correctly applied to with corrector angles."""
-    incoming = cheetah.ParticleBeam.from_parameters(
-        num_particles=100_000, energy=torch.tensor([154e6, 14e9])
+    incoming = lynx.ParticleBeam.from_parameters(
+        num_particles=100_000, energy=jnp.asarray([154e6, 14e9])
     )
     element = ElementClass(
-        length=torch.tensor(0.15), angle=torch.tensor([[1e-5], [2e-5], [3e-5]])
+        length=jnp.asarray(0.15), angle=jnp.asarray([[1e-5], [2e-5], [3e-5]])
     )
 
     outgoing = element.track(incoming)
@@ -427,12 +423,12 @@ def test_broadcasting_solenoid_misalignment():
     """
     Test that broadcasting rules are correctly applied to the misalignment in solenoids.
     """
-    incoming = cheetah.ParticleBeam.from_parameters(
-        num_particles=100_000, energy=torch.tensor([154e6, 14e9])
+    incoming = lynx.ParticleBeam.from_parameters(
+        num_particles=100_000, energy=jnp.asarray([154e6, 14e9])
     )
-    element = cheetah.Solenoid(
-        length=torch.tensor(0.15),
-        misalignment=torch.tensor(
+    element = lynx.Solenoid(
+        length=jnp.asarray(0.15),
+        misalignment=jnp.asarray(
             [
                 [[1e-5, 2e-5], [2e-5, 3e-5]],
                 [[3e-5, 4e-5], [4e-5, 5e-5]],
@@ -454,21 +450,21 @@ def test_vectorized_aperture_broadcasting(aperture_shape):
     Test that apertures work in a vectorised setting and that broadcasting rules are
     applied correctly.
     """
-    incoming = cheetah.ParticleBeam.from_parameters(
+    incoming = lynx.ParticleBeam.from_parameters(
         num_particles=100_000,
-        sigma_py=torch.tensor(1e-4),
-        sigma_px=torch.tensor(2e-4),
-        energy=torch.tensor([154e6, 14e9]),
+        sigma_py=jnp.asarray(1e-4),
+        sigma_px=jnp.asarray(2e-4),
+        energy=jnp.asarray([154e6, 14e9]),
     )
-    segment = cheetah.Segment(
+    segment = lynx.Segment(
         elements=[
-            cheetah.Drift(length=torch.tensor(0.5)),
-            cheetah.Aperture(
-                x_max=torch.tensor([[1e-5], [2e-4], [3e-4]]),
-                y_max=torch.tensor(2e-4),
+            lynx.Drift(length=jnp.asarray(0.5)),
+            lynx.Aperture(
+                x_max=jnp.asarray([[1e-5], [2e-4], [3e-4]]),
+                y_max=jnp.asarray(2e-4),
                 shape=aperture_shape,
             ),
-            cheetah.Drift(length=torch.tensor(0.5)),
+            lynx.Drift(length=jnp.asarray(0.5)),
         ]
     )
 

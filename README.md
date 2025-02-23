@@ -8,7 +8,7 @@
 
 # Lynx
 
-<img src="https://github.com/desy-ml/cheetah/raw/master/images/logo.png" align="right" width="25%"/>
+<img src="https://github.com/desy-ml/lynx/raw/master/images/logo.png" align="right" width="25%"/>
 
 **🚧 This repository is currently under construction. Do not expect this code to work yet. I recommend using _Cheetah_ for now. 🚧**
 
@@ -33,21 +33,21 @@ pip install lynx-accelerator
 A sequence of accelerator elements (or a lattice) is called a `Segment` in _Lynx_. You can create a `Segment` as follows
 
 ```python
-import torch
-from cheetah import BPM, Drift, HorizontalCorrector, Segment, VerticalCorrector
+import jax.numpy as jnp
+from lynx import BPM, Drift, HorizontalCorrector, Segment, VerticalCorrector
 
 segment = Segment(
     elements=[
         BPM(name="BPM1SMATCH"),
-        Drift(length=torch.tensor(1.0)),
+        Drift(length=jnp.tensor(1.0)),
         BPM(name="BPM6SMATCH"),
-        Drift(length=torch.tensor(1.0)),
-        VerticalCorrector(length=torch.tensor(0.3), name="V7SMATCH"),
-        Drift(length=torch.tensor(0.2)),
-        HorizontalCorrector(length=torch.tensor(0.3), name="H10SMATCH"),
-        Drift(length=torch.tensor(7.0)),
-        HorizontalCorrector(length=torch.tensor(0.3), name="H12SMATCH"),
-        Drift(length=torch.tensor(0.05)),
+        Drift(length=jnp.tensor(1.0)),
+        VerticalCorrector(length=jnp.tensor(0.3), name="V7SMATCH"),
+        Drift(length=jnp.tensor(0.2)),
+        HorizontalCorrector(length=jnp.tensor(0.3), name="H10SMATCH"),
+        Drift(length=jnp.tensor(7.0)),
+        HorizontalCorrector(length=jnp.tensor(0.3), name="H12SMATCH"),
+        Drift(length=jnp.tensor(0.05)),
         BPM(name="BPM13SMATCH"),
     ]
 )
@@ -91,7 +91,7 @@ You may plot a segment with reference particle traces bay calling
 segment.plot_overview(incoming=beam)
 ```
 
-![Overview Plot](https://github.com/desy-ml/cheetah/raw/master/images/misalignment.png)
+![Overview Plot](https://github.com/desy-ml/lynx/raw/master/images/misalignment.png)
 
 where the keyword argument `beam` is the incoming beam represented by the reference particles.
 
@@ -126,7 +126,7 @@ If you use Lynx, please cite the following two papers:
 
 Activate your virtual environment. (Optional)
 
-Install the `cheetah` package as editable
+Install the `lynx` package as editable
 
 ```sh
 pip install -e .
@@ -162,14 +162,14 @@ The following people have contributed to the development of Cheetah:
 
 The development of Cheetah is a joint effort by members of the following institutions:
 
-<img src="https://github.com/desy-ml/cheetah/raw/master/images/desy.png" alt="DESY" style="width: 5em;" vspace="2em"/>&nbsp;&nbsp;
-<img src="https://github.com/desy-ml/cheetah/raw/master/images/kit.png" alt="KIT" style="width: 7em;" vspace="2em"/>&nbsp;&nbsp;
-<img src="https://github.com/desy-ml/cheetah/raw/master/images/lbnl.png" alt="LBNL" style="width: 11em;" vspace="2em"/>&nbsp;&nbsp;
-<img src="https://github.com/desy-ml/cheetah/raw/master/images/university_of_chicago.png" alt="University of Chicago" style="width: 11em;" vspace="2em"/>&nbsp;&nbsp;
-<img src="https://github.com/desy-ml/cheetah/raw/master/images/slac.png" alt="SLAC" style="width: 9em;" vspace="2em"/>&nbsp;&nbsp;
-<img src="https://github.com/desy-ml/cheetah/raw/master/images/university_of_liverpool.png" alt="University of Liverpool" style="width: 10em;" vspace="2em"/>&nbsp;&nbsp;
-<img src="https://github.com/desy-ml/cheetah/raw/master/images/cockcroft.png" alt="Cockcroft Institute" style="width: 7em;" vspace="2em"/>&nbsp;&nbsp;
-<img src="https://github.com/desy-ml/cheetah/raw/master/images/tuhh.png" alt="Hamburg University of Technology" style="width: 5em;" vspace="2em"/>
+<img src="https://github.com/desy-ml/lynx/raw/master/images/desy.png" alt="DESY" style="width: 5em;" vspace="2em"/>&nbsp;&nbsp;
+<img src="https://github.com/desy-ml/lynx/raw/master/images/kit.png" alt="KIT" style="width: 7em;" vspace="2em"/>&nbsp;&nbsp;
+<img src="https://github.com/desy-ml/lynx/raw/master/images/lbnl.png" alt="LBNL" style="width: 11em;" vspace="2em"/>&nbsp;&nbsp;
+<img src="https://github.com/desy-ml/lynx/raw/master/images/university_of_chicago.png" alt="University of Chicago" style="width: 11em;" vspace="2em"/>&nbsp;&nbsp;
+<img src="https://github.com/desy-ml/lynx/raw/master/images/slac.png" alt="SLAC" style="width: 9em;" vspace="2em"/>&nbsp;&nbsp;
+<img src="https://github.com/desy-ml/lynx/raw/master/images/university_of_liverpool.png" alt="University of Liverpool" style="width: 10em;" vspace="2em"/>&nbsp;&nbsp;
+<img src="https://github.com/desy-ml/lynx/raw/master/images/cockcroft.png" alt="Cockcroft Institute" style="width: 7em;" vspace="2em"/>&nbsp;&nbsp;
+<img src="https://github.com/desy-ml/lynx/raw/master/images/tuhh.png" alt="Hamburg University of Technology" style="width: 5em;" vspace="2em"/>
 
 ### Funding
 

@@ -1,13 +1,13 @@
 from typing import Literal, Optional
 
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from matplotlib.patches import Rectangle
 from scipy.constants import physical_constants, speed_of_light
 
-from cheetah.accelerator.element import Element
-from cheetah.particles import Beam, ParticleBeam
-from cheetah.utils import UniqueNameGenerator, bmadx, verify_device_and_dtype
+from lynx.accelerator.element import Element
+from lynx.particles import Beam, ParticleBeam
+from lynx.utils import UniqueNameGenerator, bmadx, verify_device_and_dtype
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
@@ -33,12 +33,12 @@ class TransverseDeflectingCavity(Element):
 
     def __init__(
         self,
-        length: torch.Tensor,
-        voltage: Optional[torch.Tensor] = None,
-        phase: Optional[torch.Tensor] = None,
-        frequency: Optional[torch.Tensor] = None,
-        misalignment: Optional[torch.Tensor] = None,
-        tilt: Optional[torch.Tensor] = None,
+        length: jnp.Array,
+        voltage: Optional[jnp.Array] = None,
+        phase: Optional[jnp.Array] = None,
+        frequency: Optional[jnp.Array] = None,
+        misalignment: Optional[jnp.Array] = None,
+        tilt: Optional[jnp.Array] = None,
         num_steps: int = 1,
         tracking_method: Literal["bmadx"] = "bmadx",
         name: Optional[str] = None,
@@ -51,30 +51,30 @@ class TransverseDeflectingCavity(Element):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name, **factory_kwargs)
 
-        self.register_buffer("voltage", torch.tensor(0.0, **factory_kwargs))
-        self.register_buffer("phase", torch.tensor(0.0, **factory_kwargs))
-        self.register_buffer("frequency", torch.tensor(0.0, **factory_kwargs))
-        self.register_buffer("misalignment", torch.tensor((0.0, 0.0), **factory_kwargs))
-        self.register_buffer("tilt", torch.tensor(0.0, **factory_kwargs))
+        self.register_buffer("voltage", jnp.asarray(0.0, **factory_kwargs))
+        self.register_buffer("phase", jnp.asarray(0.0, **factory_kwargs))
+        self.register_buffer("frequency", jnp.asarray(0.0, **factory_kwargs))
+        self.register_buffer("misalignment", jnp.asarray((0.0, 0.0), **factory_kwargs))
+        self.register_buffer("tilt", jnp.asarray(0.0, **factory_kwargs))
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.as_tensor(length, **factory_kwargs)
         if voltage is not None:
-            self.voltage = torch.as_tensor(voltage, **factory_kwargs)
+            self.voltage = jnp.as_tensor(voltage, **factory_kwargs)
         if phase is not None:
-            self.phase = torch.as_tensor(phase, **factory_kwargs)
+            self.phase = jnp.as_tensor(phase, **factory_kwargs)
         if frequency is not None:
-            self.frequency = torch.as_tensor(frequency, **factory_kwargs)
+            self.frequency = jnp.as_tensor(frequency, **factory_kwargs)
         if misalignment is not None:
-            self.misalignment = torch.as_tensor(misalignment, **factory_kwargs)
+            self.misalignment = jnp.as_tensor(misalignment, **factory_kwargs)
         if tilt is not None:
-            self.tilt = torch.as_tensor(tilt, **factory_kwargs)
+            self.tilt = jnp.as_tensor(tilt, **factory_kwargs)
 
         self.num_steps = num_steps
         self.tracking_method = tracking_method
 
     @property
     def is_active(self) -> bool:
-        return torch.any(self.voltage != 0)
+        return jnp.any(self.voltage != 0)
 
     @property
     def is_skippable(self) -> bool:
@@ -88,9 +88,9 @@ class TransverseDeflectingCavity(Element):
         :param incoming: Beam entering the element.
         :return: Beam exiting the element.
         """
-        if self.tracking_method == "cheetah":
+        if self.tracking_method == "lynx":
             raise NotImplementedError(
-                "Cheetah transverse deflecting cavity tracking is not yet implemented."
+                "Lynx transverse deflecting cavity tracking is not yet implemented."
             )
         elif self.tracking_method == "bmadx":
             assert isinstance(
@@ -100,7 +100,7 @@ class TransverseDeflectingCavity(Element):
         else:
             raise ValueError(
                 f"Invalid tracking method {self.tracking_method}. "
-                + "Supported methods are 'cheetah' and 'bmadx'."
+                + "Supported methods are 'lynx' and 'bmadx'."
             )
 
     def _track_bmadx(self, incoming: ParticleBeam) -> ParticleBeam:
@@ -119,7 +119,7 @@ class TransverseDeflectingCavity(Element):
         tau = incoming.tau
         delta = incoming.p
 
-        z, pz, p0c = bmadx.cheetah_to_bmad_z_pz(
+        z, pz, p0c = bmadx.lynx_to_bmad_z_pz(
             tau, delta, incoming.energy, electron_mass_eV
         )
 
@@ -136,11 +136,11 @@ class TransverseDeflectingCavity(Element):
         )
 
         voltage = self.voltage / p0c
-        k_rf = 2 * torch.pi * self.frequency / speed_of_light
+        k_rf = 2 * jnp.pi * self.frequency / speed_of_light
         # Phase that the particle sees
         phase = (
             2
-            * torch.pi
+            * jnp.pi
             * (
                 self.phase.unsqueeze(-1)
                 - (
@@ -152,18 +152,18 @@ class TransverseDeflectingCavity(Element):
 
         # TODO: Assigning px to px is really bad practice and should be separated into
         # two separate variables
-        px = px + voltage.unsqueeze(-1) * torch.sin(phase)
+        px = px + voltage.unsqueeze(-1) * jnp.sin(phase)
 
         beta_old = (
             (1 + pz)
             * p0c.unsqueeze(-1)
-            / torch.sqrt(((1 + pz) * p0c.unsqueeze(-1)) ** 2 + electron_mass_eV**2)
+            / jnp.sqrt(((1 + pz) * p0c.unsqueeze(-1)) ** 2 + electron_mass_eV**2)
         )
         E_old = (1 + pz) * p0c.unsqueeze(-1) / beta_old
-        E_new = E_old + voltage.unsqueeze(-1) * torch.cos(phase) * k_rf.unsqueeze(
+        E_new = E_old + voltage.unsqueeze(-1) * jnp.cos(phase) * k_rf.unsqueeze(
             -1
         ) * x * p0c.unsqueeze(-1)
-        pc = torch.sqrt(E_new**2 - electron_mass_eV**2)
+        pc = jnp.sqrt(E_new**2 - electron_mass_eV**2)
         beta = pc / E_new
 
         pz = (pc - p0c.unsqueeze(-1)) / p0c.unsqueeze(-1)
@@ -178,15 +178,11 @@ class TransverseDeflectingCavity(Element):
         )
         # End of Bmad-X tracking
 
-        # Convert back to Cheetah coordinates
-        tau, delta, ref_energy = bmadx.bmad_to_cheetah_z_pz(
-            z, pz, p0c, electron_mass_eV
-        )
+        # Convert back to Lynx coordinates
+        tau, delta, ref_energy = bmadx.bmad_to_lynx_z_pz(z, pz, p0c, electron_mass_eV)
 
         outgoing_beam = ParticleBeam(
-            particles=torch.stack(
-                (x, px, y, py, tau, delta, torch.ones_like(x)), dim=-1
-            ),
+            particles=jnp.stack((x, px, y, py, tau, delta, jnp.ones_like(x)), dim=-1),
             energy=ref_energy,
             particle_charges=incoming.particle_charges,
             survival_probabilities=incoming.survival_probabilities,
@@ -195,7 +191,7 @@ class TransverseDeflectingCavity(Element):
         )
         return outgoing_beam
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
+    def split(self, resolution: jnp.Array) -> list[Element]:
         # TODO: Implement splitting for cavity properly, for now just returns the
         # element itself
         return [self]

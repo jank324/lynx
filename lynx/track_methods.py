@@ -2,12 +2,12 @@
 
 from typing import Optional
 
-import torch
+import jax.numpy as jnp
 
-from cheetah.utils import compute_relativistic_factors
+from lynx.utils import compute_relativistic_factors
 
 
-def rotation_matrix(angle: torch.Tensor) -> torch.Tensor:
+def rotation_matrix(angle: jnp.Array) -> jnp.Array:
     """Rotate the transfer map in x-y plane.
 
     :param angle: Rotation angle in rad, for example `angle = np.pi/2` for vertical =
@@ -50,9 +50,9 @@ def base_rmatrix(
     device = length.device
     dtype = length.dtype
 
-    tilt = tilt if tilt is not None else torch.tensor(0.0, device=device, dtype=dtype)
+    tilt = tilt if tilt is not None else jnp.asarray(0.0, device=device, dtype=dtype)
     energy = (
-        energy if energy is not None else torch.tensor(0.0, device=device, dtype=dtype)
+        energy if energy is not None else jnp.asarray(0.0, device=device, dtype=dtype)
     )
 
     _, igamma2, beta = compute_relativistic_factors(energy)
@@ -63,22 +63,22 @@ def base_rmatrix(
 
     kx2 = k1 + hx**2
     ky2 = -k1
-    kx = torch.sqrt(torch.complex(kx2, torch.tensor(0.0, device=device, dtype=dtype)))
-    ky = torch.sqrt(torch.complex(ky2, torch.tensor(0.0, device=device, dtype=dtype)))
-    cx = torch.cos(kx * length).real
-    cy = torch.cos(ky * length).real
-    sy = (torch.sin(ky * length) / ky).real
-    sx = (torch.sin(kx * length) / kx).real
+    kx = jnp.sqrt(jnp.complex(kx2, jnp.asarray(0.0, device=device, dtype=dtype)))
+    ky = jnp.sqrt(jnp.complex(ky2, jnp.asarray(0.0, device=device, dtype=dtype)))
+    cx = jnp.cos(kx * length).real
+    cy = jnp.cos(ky * length).real
+    sy = (jnp.sin(ky * length) / ky).real
+    sx = (jnp.sin(kx * length) / kx).real
     dx = hx / kx2 * (1.0 - cx)
     r56 = hx**2 * (length - sx) / kx2 / beta**2
 
     r56 = r56 - length / beta**2 * igamma2
 
-    vector_shape = torch.broadcast_shapes(
+    vector_shape = jnp.broadcast_shapes(
         length.shape, k1.shape, hx.shape, tilt.shape, energy.shape
     )
 
-    R = torch.eye(7, dtype=dtype, device=device).repeat(*vector_shape, 1, 1)
+    R = jnp.eye(7, dtype=dtype, device=device).repeat(*vector_shape, 1, 1)
     R[..., 0, 0] = cx
     R[..., 0, 1] = sx
     R[..., 0, 5] = dx / beta
@@ -102,19 +102,19 @@ def base_rmatrix(
 
 
 def misalignment_matrix(
-    misalignment: torch.Tensor,
-) -> tuple[torch.Tensor, torch.Tensor]:
+    misalignment: jnp.Array,
+) -> tuple[jnp.Array, jnp.Array]:
     """Shift the beam for tracking beam through misaligned elements."""
     device = misalignment.device
     dtype = misalignment.dtype
 
     vector_shape = misalignment.shape[:-1]
 
-    R_exit = torch.eye(7, device=device, dtype=dtype).repeat(*vector_shape, 1, 1)
+    R_exit = jnp.eye(7, device=device, dtype=dtype).repeat(*vector_shape, 1, 1)
     R_exit[..., 0, 6] = misalignment[..., 0]
     R_exit[..., 2, 6] = misalignment[..., 1]
 
-    R_entry = torch.eye(7, device=device, dtype=dtype).repeat(*vector_shape, 1, 1)
+    R_entry = jnp.eye(7, device=device, dtype=dtype).repeat(*vector_shape, 1, 1)
     R_entry[..., 0, 6] = -misalignment[..., 0]
     R_entry[..., 2, 6] = -misalignment[..., 1]
 

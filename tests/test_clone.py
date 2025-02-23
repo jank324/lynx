@@ -1,22 +1,22 @@
+import jax.numpy as jnp
 import pytest
-import torch
 
-import cheetah
+import lynx
 
 
 @pytest.mark.parametrize(
     "ElementClass",
     [
-        cheetah.Cavity,
-        cheetah.Dipole,
-        cheetah.Drift,
-        cheetah.HorizontalCorrector,
-        cheetah.Quadrupole,
-        cheetah.RBend,
-        cheetah.Solenoid,
-        cheetah.TransverseDeflectingCavity,
-        cheetah.Undulator,
-        cheetah.VerticalCorrector,
+        lynx.Cavity,
+        lynx.Dipole,
+        lynx.Drift,
+        lynx.HorizontalCorrector,
+        lynx.Quadrupole,
+        lynx.RBend,
+        lynx.Solenoid,
+        lynx.TransverseDeflectingCavity,
+        lynx.Undulator,
+        lynx.VerticalCorrector,
     ],
 )
 def test_element_buffer_contents_and_location(ElementClass):
@@ -24,15 +24,15 @@ def test_element_buffer_contents_and_location(ElementClass):
     Test that the buffers of cloned elements have the same content while not sharing the
     same memory location.
     """
-    element = ElementClass(length=torch.tensor(1.0))
+    element = ElementClass(length=jnp.asarray(1.0))
     clone = element.clone()
 
     for buffer, buffer_clone in zip(element.buffers(), clone.buffers()):
-        assert torch.allclose(buffer, buffer_clone)
+        assert jnp.allclose(buffer, buffer_clone)
         assert not buffer.data_ptr() == buffer_clone.data_ptr()
 
 
-@pytest.mark.parametrize("BeamClass", [cheetah.ParameterBeam, cheetah.ParticleBeam])
+@pytest.mark.parametrize("BeamClass", [lynx.ParameterBeam, lynx.ParticleBeam])
 def test_beam_buffer_contents_and_location(BeamClass):
     """
     Test that the buffers of cloned beams have the same content while not sharing the
@@ -42,5 +42,5 @@ def test_beam_buffer_contents_and_location(BeamClass):
     clone = beam.clone()
 
     for buffer, buffer_clone in zip(beam.buffers(), clone.buffers()):
-        assert torch.allclose(buffer, buffer_clone)
+        assert jnp.allclose(buffer, buffer_clone)
         assert not buffer.data_ptr() == buffer_clone.data_ptr()

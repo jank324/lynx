@@ -8,7 +8,7 @@ from typing import Any
 import scipy
 from scipy.constants import physical_constants
 
-from cheetah.converters.utils import rpn
+from lynx.converters.utils import rpn
 
 
 def read_clean_lines(lattice_file_path: Path) -> list[str]:
@@ -415,12 +415,12 @@ def parse_lines(lines: str) -> dict:
 def validate_understood_properties(understood: list[str], properties: dict) -> None:
     """
     Validate that all properties are understood. This function primarily ensures that
-    properties not understood by Cheetah are not ignored silently.
+    properties not understood by Lynx are not ignored silently.
 
     Raises an `AssertionError` if a property is found that is not understood.
 
     :param understood: List of properties understood (or purpusefully ignored) by
-        Cheetah.
+        Lynx.
     :param properties: Dictionary of properties to validate.
     :return: None
     """

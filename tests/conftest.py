@@ -1,9 +1,9 @@
 import random
 
+import jax.numpy as jnp
 import pytest
-import torch
 
-from cheetah.utils import is_mps_available_and_functional
+from lynx.utils import is_mps_available_and_functional
 
 
 def pytest_addoption(parser):
@@ -29,8 +29,8 @@ def seed_random_generators(request):
     seed = request.config.getoption("--seed")
 
     # Manually seed all torch PRNGs
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
+    jnp.manual_seed(seed)
+    if jnp.cuda.is_available():
+        jnp.cuda.manual_seed_all(seed)
     if is_mps_available_and_functional():
-        torch.mps.manual_seed(seed)
+        jnp.mps.manual_seed(seed)

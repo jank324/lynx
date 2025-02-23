@@ -3,12 +3,11 @@ from typing import Optional
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from matplotlib.patches import Rectangle
 
-from cheetah.accelerator.element import Element
-from cheetah.particles import Beam
-from cheetah.utils import UniqueNameGenerator, verify_device_and_dtype
+from lynx.accelerator.element import Element
+from lynx.particles import Beam
+from lynx.utils import UniqueNameGenerator, verify_device_and_dtype
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
@@ -20,8 +19,8 @@ class CustomTransferMap(Element):
 
     def __init__(
         self,
-        predefined_transfer_map: torch.Tensor,
-        length: Optional[torch.Tensor] = None,
+        predefined_transfer_map: jnp.Array,
+        length: Optional[jnp.Array] = None,
         name: Optional[str] = None,
         device=None,
         dtype=None,
@@ -32,16 +31,16 @@ class CustomTransferMap(Element):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name, **factory_kwargs)
 
-        assert isinstance(predefined_transfer_map, torch.Tensor)
+        assert isinstance(predefined_transfer_map, jnp.Array)
         assert predefined_transfer_map.shape[-2:] == (7, 7)
 
         self.register_buffer("predefined_transfer_map", None)
 
-        self.predefined_transfer_map = torch.as_tensor(
+        self.predefined_transfer_map = jnp.as_tensor(
             predefined_transfer_map, **factory_kwargs
         )
         if length is not None:
-            self.length = torch.as_tensor(length, **factory_kwargs)
+            self.length = jnp.as_tensor(length, **factory_kwargs)
 
     @classmethod
     def from_merging_elements(
@@ -82,7 +81,7 @@ class CustomTransferMap(Element):
             tm, length=combined_length, device=device, dtype=dtype, name=combined_name
         )
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jnp.Array) -> jnp.Array:
         return self.predefined_transfer_map
 
     @property

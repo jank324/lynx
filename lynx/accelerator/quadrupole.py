@@ -3,14 +3,13 @@ from typing import Literal, Optional
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import torch
 from matplotlib.patches import Rectangle
 from scipy.constants import physical_constants
 
-from cheetah.accelerator.element import Element
-from cheetah.particles import Beam, ParticleBeam
-from cheetah.track_methods import base_rmatrix, misalignment_matrix
-from cheetah.utils import UniqueNameGenerator, bmadx, verify_device_and_dtype
+from lynx.accelerator.element import Element
+from lynx.particles import Beam, ParticleBeam
+from lynx.track_methods import base_rmatrix, misalignment_matrix
+from lynx.utils import UniqueNameGenerator, bmadx, verify_device_and_dtype
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
@@ -34,12 +33,12 @@ class Quadrupole(Element):
 
     def __init__(
         self,
-        length: torch.Tensor,
-        k1: Optional[torch.Tensor] = None,
-        misalignment: Optional[torch.Tensor] = None,
-        tilt: Optional[torch.Tensor] = None,
+        length: jnp.Array,
+        k1: Optional[jnp.Array] = None,
+        misalignment: Optional[jnp.Array] = None,
+        tilt: Optional[jnp.Array] = None,
         num_steps: int = 1,
-        tracking_method: Literal["cheetah", "bmadx"] = "cheetah",
+        tracking_method: Literal["lynx", "bmadx"] = "lynx",
         name: Optional[str] = None,
         device=None,
         dtype=None,
@@ -50,17 +49,17 @@ class Quadrupole(Element):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name, **factory_kwargs)
 
-        self.register_buffer("k1", torch.tensor(0.0, **factory_kwargs))
-        self.register_buffer("misalignment", torch.tensor((0.0, 0.0), **factory_kwargs))
-        self.register_buffer("tilt", torch.tensor(0.0, **factory_kwargs))
+        self.register_buffer("k1", jnp.asarray(0.0, **factory_kwargs))
+        self.register_buffer("misalignment", jnp.asarray((0.0, 0.0), **factory_kwargs))
+        self.register_buffer("tilt", jnp.asarray(0.0, **factory_kwargs))
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.as_tensor(length, **factory_kwargs)
         if k1 is not None:
-            self.k1 = torch.as_tensor(k1, **factory_kwargs)
+            self.k1 = jnp.as_tensor(k1, **factory_kwargs)
         if misalignment is not None:
-            self.misalignment = torch.as_tensor(misalignment, **factory_kwargs)
+            self.misalignment = jnp.as_tensor(misalignment, **factory_kwargs)
         if tilt is not None:
-            self.tilt = torch.as_tensor(tilt, **factory_kwargs)
+            self.tilt = jnp.as_tensor(tilt, **factory_kwargs)
 
         self.num_steps = num_steps
         self.tracking_method = tracking_method
@@ -88,7 +87,7 @@ class Quadrupole(Element):
         :param incoming: Beam entering the element.
         :return: Beam exiting the element.
         """
-        if self.tracking_method == "cheetah":
+        if self.tracking_method == "lynx":
             return super().track(incoming)
         elif self.tracking_method == "bmadx":
             assert isinstance(
@@ -98,7 +97,7 @@ class Quadrupole(Element):
         else:
             raise ValueError(
                 f"Invalid tracking method {self.tracking_method}. "
-                + "Supported methods are 'cheetah' and 'bmadx'."
+                + "Supported methods are 'lynx' and 'bmadx'."
             )
 
     def _track_bmadx(self, incoming: ParticleBeam) -> ParticleBeam:
@@ -117,7 +116,7 @@ class Quadrupole(Element):
         tau = incoming.tau
         delta = incoming.p
 
-        z, pz, p0c = bmadx.cheetah_to_bmad_z_pz(
+        z, pz, p0c = bmadx.lynx_to_bmad_z_pz(
             tau, delta, incoming.energy, electron_mass_eV
         )
 
@@ -166,18 +165,14 @@ class Quadrupole(Element):
         )
 
         # pz is unaffected by tracking, therefore needs to match vector dimensions
-        pz = pz * torch.ones_like(x)
+        pz = pz * jnp.ones_like(x)
         # End of Bmad-X tracking
 
-        # Convert back to Cheetah coordinates
-        tau, delta, ref_energy = bmadx.bmad_to_cheetah_z_pz(
-            z, pz, p0c, electron_mass_eV
-        )
+        # Convert back to Lynx coordinates
+        tau, delta, ref_energy = bmadx.bmad_to_lynx_z_pz(z, pz, p0c, electron_mass_eV)
 
         outgoing_beam = ParticleBeam(
-            particles=torch.stack(
-                (x, px, y, py, tau, delta, torch.ones_like(x)), dim=-1
-            ),
+            particles=jnp.stack((x, px, y, py, tau, delta, jnp.ones_like(x)), dim=-1),
             energy=ref_energy,
             particle_charges=incoming.particle_charges,
             survival_probabilities=incoming.survival_probabilities,
@@ -188,14 +183,14 @@ class Quadrupole(Element):
 
     @property
     def is_skippable(self) -> bool:
-        return self.tracking_method == "cheetah"
+        return self.tracking_method == "lynx"
 
     @property
     def is_active(self) -> bool:
-        return torch.any(self.k1 != 0)
+        return jnp.any(self.k1 != 0)
 
-    def split(self, resolution: torch.Tensor) -> list[Element]:
-        num_splits = torch.ceil(torch.max(self.length) / resolution).int()
+    def split(self, resolution: jnp.Array) -> list[Element]:
+        num_splits = jnp.ceil(jnp.max(self.length) / resolution).int()
         return [
             Quadrupole(
                 self.length / num_splits,
@@ -216,7 +211,7 @@ class Quadrupole(Element):
         plot_length = self.length[vector_idx] if self.length.dim() > 0 else self.length
 
         alpha = 1 if self.is_active else 0.2
-        height = 0.8 * (torch.sign(plot_k1) if self.is_active else 1)
+        height = 0.8 * (jnp.sign(plot_k1) if self.is_active else 1)
         patch = Rectangle(
             (plot_s, 0), plot_length, height, color="tab:red", alpha=alpha, zorder=2
         )

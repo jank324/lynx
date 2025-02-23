@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from scipy.constants import physical_constants
 
-from cheetah.accelerator.element import Element
-from cheetah.track_methods import misalignment_matrix
-from cheetah.utils import (
+from lynx.accelerator.element import Element
+from lynx.track_methods import misalignment_matrix
+from lynx.utils import (
     UniqueNameGenerator,
     compute_relativistic_factors,
     verify_device_and_dtype,
@@ -35,9 +35,9 @@ class Solenoid(Element):
 
     def __init__(
         self,
-        length: torch.Tensor = None,
-        k: Optional[torch.Tensor] = None,
-        misalignment: Optional[torch.Tensor] = None,
+        length: jnp.Array = None,
+        k: Optional[jnp.Array] = None,
+        misalignment: Optional[jnp.Array] = None,
         name: Optional[str] = None,
         device=None,
         dtype=None,
@@ -48,34 +48,34 @@ class Solenoid(Element):
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(name=name, **factory_kwargs)
 
-        self.register_buffer("k", torch.tensor(0.0, **factory_kwargs))
-        self.register_buffer("misalignment", torch.tensor((0.0, 0.0), **factory_kwargs))
+        self.register_buffer("k", jnp.asarray(0.0, **factory_kwargs))
+        self.register_buffer("misalignment", jnp.asarray((0.0, 0.0), **factory_kwargs))
 
-        self.length = torch.as_tensor(length, **factory_kwargs)
+        self.length = jnp.as_tensor(length, **factory_kwargs)
         if k is not None:
-            self.k = torch.as_tensor(k, **factory_kwargs)
+            self.k = jnp.as_tensor(k, **factory_kwargs)
         if misalignment is not None:
-            self.misalignment = torch.as_tensor(misalignment, **factory_kwargs)
+            self.misalignment = jnp.as_tensor(misalignment, **factory_kwargs)
 
     def transfer_map(self, energy: jax.Array) -> jax.Array:
         device = self.length.device
         dtype = self.length.dtype
 
         gamma, _, _ = compute_relativistic_factors(energy)
-        c = torch.cos(self.length * self.k)
-        s = torch.sin(self.length * self.k)
+        c = jnp.cos(self.length * self.k)
+        s = jnp.sin(self.length * self.k)
 
-        s_k = torch.where(self.k == 0.0, self.length, s / self.k)
+        s_k = jnp.where(self.k == 0.0, self.length, s / self.k)
 
-        vector_shape = torch.broadcast_shapes(
+        vector_shape = jnp.broadcast_shapes(
             self.length.shape, self.k.shape, energy.shape
         )
 
-        r56 = torch.where(
-            gamma != 0, self.length / (1 - gamma**2), torch.zeros_like(self.length)
+        r56 = jnp.where(
+            gamma != 0, self.length / (1 - gamma**2), jnp.zeros_like(self.length)
         )
 
-        R = torch.eye(7, device=device, dtype=dtype).repeat((*vector_shape, 1, 1))
+        R = jnp.eye(7, device=device, dtype=dtype).repeat((*vector_shape, 1, 1))
         R[..., 0, 0] = c**2
         R[..., 0, 1] = c * s_k
         R[..., 0, 2] = s * c
@@ -105,7 +105,7 @@ class Solenoid(Element):
 
     @property
     def is_active(self) -> bool:
-        return torch.any(self.k != 0)
+        return jnp.any(self.k != 0)
 
     def is_skippable(self) -> bool:
         return True

@@ -1,8 +1,8 @@
+import jax.numpy as jnp
 import pytest
-import torch
 
-import cheetah
-from cheetah.utils import is_mps_available_and_functional
+import lynx
+from lynx.utils import is_mps_available_and_functional
 
 
 def test_bmad_tutorial():
@@ -13,12 +13,12 @@ def test_bmad_tutorial():
 
     correct = lynx.Segment(
         [
-            cheetah.Drift(length=torch.tensor([0.5]), name="d"),
-            cheetah.Dipole(
-                length=torch.tensor([0.5]), dipole_e1=torch.tensor([0.1]), name="b"
+            lynx.Drift(length=jnp.asarray([0.5]), name="d"),
+            lynx.Dipole(
+                length=jnp.asarray([0.5]), dipole_e1=jnp.asarray([0.1]), name="b"
             ),  # TODO: What are g and dg?
-            cheetah.Quadrupole(
-                length=torch.tensor([0.6]), k1=torch.tensor([0.23]), name="q"
+            lynx.Quadrupole(
+                length=jnp.asarray([0.6]), k1=jnp.asarray([0.23]), name="q"
             ),
         ],
         name="bmad_tutorial",
@@ -39,27 +39,27 @@ def test_bmad_tutorial():
 @pytest.mark.parametrize(
     "device",
     [
-        torch.device("cpu"),
+        jnp.device("cpu"),
         pytest.param(
-            torch.device("cuda"),
+            jnp.device("cuda"),
             marks=pytest.mark.skipif(
-                not torch.cuda.is_available(), reason="CUDA not available"
+                not jnp.cuda.is_available(), reason="CUDA not available"
             ),
         ),
         pytest.param(
-            torch.device("mps"),
+            jnp.device("mps"),
             marks=pytest.mark.skipif(
                 not is_mps_available_and_functional(), reason="MPS not available"
             ),
         ),
     ],
 )
-def test_device_passing(device: torch.device):
+def test_device_passing(device: jnp.device):
     """Test that the device is passed correctly."""
     file_path = "tests/resources/bmad_tutorial_lattice.bmad"
 
     # Convert the lattice while passing the device
-    converted = cheetah.Segment.from_bmad(file_path, device=device)
+    converted = lynx.Segment.from_bmad(file_path, device=device)
 
     # Check that the properties of the loaded elements are on the correct device
     assert converted.d.length.device.type == device.type
@@ -69,13 +69,13 @@ def test_device_passing(device: torch.device):
     assert converted.q.k1.device.type == device.type
 
 
-@pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
-def test_dtype_passing(dtype: torch.dtype):
+@pytest.mark.parametrize("dtype", [jnp.float32, jnp.float64])
+def test_dtype_passing(dtype: jnp.dtype):
     """Test that the dtype is passed correctly."""
     file_path = "tests/resources/bmad_tutorial_lattice.bmad"
 
     # Convert the lattice while passing the dtype
-    converted = cheetah.Segment.from_bmad(file_path, dtype=dtype)
+    converted = lynx.Segment.from_bmad(file_path, dtype=dtype)
 
     # Check that the properties of the loaded elements are of the correct dtype
     assert converted.d.length.dtype == dtype

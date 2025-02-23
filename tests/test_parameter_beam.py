@@ -9,20 +9,20 @@ def test_create_from_parameters():
     Test that a `ParameterBeam` created from parameters actually has those parameters.
     """
     beam = ParameterBeam.from_parameters(
-        mu_x=torch.tensor(1e-5),
-        mu_px=torch.tensor(1e-7),
-        mu_y=torch.tensor(2e-5),
-        mu_py=torch.tensor(2e-7),
-        sigma_x=torch.tensor(1.75e-7),
-        sigma_px=torch.tensor(2e-7),
-        sigma_y=torch.tensor(1.75e-7),
-        sigma_py=torch.tensor(2e-7),
-        sigma_tau=torch.tensor(0.000001),
-        sigma_p=torch.tensor(0.000001),
-        cov_xpx=torch.tensor(0.0),
-        cov_ypy=torch.tensor(0.0),
-        cov_taup=torch.tensor(0.0),
-        energy=torch.tensor(1e7),
+        mu_x=jnp.asarray(1e-5),
+        mu_px=jnp.asarray(1e-7),
+        mu_y=jnp.asarray(2e-5),
+        mu_py=jnp.asarray(2e-7),
+        sigma_x=jnp.asarray(1.75e-7),
+        sigma_px=jnp.asarray(2e-7),
+        sigma_y=jnp.asarray(1.75e-7),
+        sigma_py=jnp.asarray(2e-7),
+        sigma_tau=jnp.asarray(0.000001),
+        sigma_p=jnp.asarray(0.000001),
+        cov_xpx=jnp.asarray(0.0),
+        cov_ypy=jnp.asarray(0.0),
+        cov_taup=jnp.asarray(0.0),
+        energy=jnp.asarray(1e7),
     )
 
     assert np.isclose(beam.mu_x.cpu().numpy(), 1e-5)
@@ -45,18 +45,18 @@ def test_transform_to():
     """
     original_beam = ParameterBeam.from_parameters()
     transformed_beam = original_beam.transformed_to(
-        mu_x=torch.tensor(1e-5),
-        mu_px=torch.tensor(1e-7),
-        mu_y=torch.tensor(2e-5),
-        mu_py=torch.tensor(2e-7),
-        sigma_x=torch.tensor(1.75e-7),
-        sigma_px=torch.tensor(2e-7),
-        sigma_y=torch.tensor(1.75e-7),
-        sigma_py=torch.tensor(2e-7),
-        sigma_tau=torch.tensor(0.000001),
-        sigma_p=torch.tensor(0.000001),
-        energy=torch.tensor(1e7),
-        total_charge=torch.tensor(1e-9),
+        mu_x=jnp.asarray(1e-5),
+        mu_px=jnp.asarray(1e-7),
+        mu_y=jnp.asarray(2e-5),
+        mu_py=jnp.asarray(2e-7),
+        sigma_x=jnp.asarray(1.75e-7),
+        sigma_px=jnp.asarray(2e-7),
+        sigma_y=jnp.asarray(1.75e-7),
+        sigma_py=jnp.asarray(2e-7),
+        sigma_tau=jnp.asarray(0.000001),
+        sigma_p=jnp.asarray(0.000001),
+        energy=jnp.asarray(1e7),
+        total_charge=jnp.asarray(1e-9),
     )
 
     assert isinstance(transformed_beam, ParameterBeam)
@@ -80,13 +80,13 @@ def test_from_twiss_to_twiss():
     parameters.
     """
     beam = ParameterBeam.from_twiss(
-        beta_x=torch.tensor(5.91253676811640894),
-        alpha_x=torch.tensor(3.55631307633660354),
-        emittance_x=torch.tensor(3.494768647122823e-09),
-        beta_y=torch.tensor(5.91253676811640982),
-        alpha_y=torch.tensor(2e-7),
-        emittance_y=torch.tensor(3.497810737006068e-09),
-        energy=torch.tensor(6e6),
+        beta_x=jnp.asarray(5.91253676811640894),
+        alpha_x=jnp.asarray(3.55631307633660354),
+        emittance_x=jnp.asarray(3.494768647122823e-09),
+        beta_y=jnp.asarray(5.91253676811640982),
+        alpha_y=jnp.asarray(2e-7),
+        emittance_y=jnp.asarray(3.497810737006068e-09),
+        energy=jnp.asarray(6e6),
     )
 
     assert np.isclose(beam.beta_x.cpu().numpy(), 5.91253676811640894)
@@ -103,14 +103,14 @@ def test_from_twiss_dtype():
     Test that a `ParameterBeam` created from twiss parameters has the requested `dtype`.
     """
     beam = ParameterBeam.from_twiss(
-        beta_x=torch.tensor(5.91253676811640894),
-        alpha_x=torch.tensor(3.55631307633660354),
-        emittance_x=torch.tensor(3.494768647122823e-09),
-        beta_y=torch.tensor(5.91253676811640982),
-        alpha_y=torch.tensor(2e-7),
-        emittance_y=torch.tensor(3.497810737006068e-09),
-        energy=torch.tensor(6e6),
-        dtype=torch.float64,
+        beta_x=jnp.asarray(5.91253676811640894),
+        alpha_x=jnp.asarray(3.55631307633660354),
+        emittance_x=jnp.asarray(3.494768647122823e-09),
+        beta_y=jnp.asarray(5.91253676811640982),
+        alpha_y=jnp.asarray(2e-7),
+        emittance_y=jnp.asarray(3.497810737006068e-09),
+        energy=jnp.asarray(6e6),
+        dtype=jnp.float64,
     )
 
     assert np.isclose(beam.beta_x.cpu().numpy(), 5.91253676811640894)
@@ -121,8 +121,8 @@ def test_from_twiss_dtype():
     assert np.isclose(beam.emittance_y.cpu().numpy(), 3.497810737006068e-09)
     assert np.isclose(beam.energy.cpu().numpy(), 6e6)
 
-    assert beam._mu.dtype == torch.float64
-    assert beam._cov.dtype == torch.float64
+    assert beam._mu.dtype == jnp.float64
+    assert beam._cov.dtype == jnp.float64
 
 
 def test_conversion_to_and_from_particle_beam():
@@ -133,7 +133,7 @@ def test_conversion_to_and_from_particle_beam():
     NOTE: Runs in double precision to avoid numerical issues.
     """
     original_parameter_beam = ParameterBeam.from_astra(
-        "tests/resources/ACHIP_EA1_2021.1351.001", dtype=torch.float64
+        "tests/resources/ACHIP_EA1_2021.1351.001", dtype=jnp.float64
     )
     particle_beam = original_parameter_beam.as_particle_beam(num_particles=10_000_000)
     reconstructed_parameter_beam = particle_beam.as_parameter_beam()
@@ -142,53 +142,53 @@ def test_conversion_to_and_from_particle_beam():
     assert particle_beam.num_particles == 10_000_000
 
     # Check that reconstructed `ParameterBeam` has the same parameters as the original
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.mu_x, reconstructed_parameter_beam.mu_x, atol=1e-6
     )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.mu_y, reconstructed_parameter_beam.mu_y, atol=1e-6
     )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.sigma_x, reconstructed_parameter_beam.sigma_x, rtol=1e-3
     )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.sigma_y, reconstructed_parameter_beam.sigma_y, rtol=1e-3
     )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.mu_px, reconstructed_parameter_beam.mu_px, atol=1e-6
     )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.mu_py, reconstructed_parameter_beam.mu_py, atol=1e-6
     )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.sigma_px,
         reconstructed_parameter_beam.sigma_px,
         rtol=1e-3,
     )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.sigma_py,
         reconstructed_parameter_beam.sigma_py,
         rtol=1e-3,
     )
     # TODO: Fix after #332 has been clarified
-    # assert torch.isclose(
+    # assert jnp.isclose(
     #     original_parameter_beam.mu_tau, reconstructed_parameter_beam.mu_tau, atol=1e-6
     # )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.sigma_tau,
         reconstructed_parameter_beam.sigma_tau,
         rtol=1e-3,
     )
     # TODO: Fix after #332 has been clarified
-    # assert torch.isclose(
+    # assert jnp.isclose(
     #     original_parameter_beam.mu_p, reconstructed_parameter_beam.mu_p, atol=1e-6
     # )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.sigma_p, reconstructed_parameter_beam.sigma_p, rtol=1e-3
     )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.energy, reconstructed_parameter_beam.energy
     )
-    assert torch.isclose(
+    assert jnp.isclose(
         original_parameter_beam.total_charge, reconstructed_parameter_beam.total_charge
     )

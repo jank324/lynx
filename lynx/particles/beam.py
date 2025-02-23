@@ -14,7 +14,7 @@ class Beam(ABC, nn.Module):
     Parent class to represent a beam of particles. You should not instantiate this
     class directly, but use one of the subclasses.
 
-    Cheetah uses a 7D vector to describe the state of a particle.
+    Lynx uses a 7D vector to describe the state of a particle.
     It contains the 6D phase space vector (x, px, y, yp, tau, p) and an additional
     dimension (always 1) for convenient calculations.
 
@@ -38,23 +38,23 @@ class Beam(ABC, nn.Module):
     @abstractmethod
     def from_parameters(
         cls,
-        mu_x: Optional[torch.Tensor] = None,
-        mu_px: Optional[torch.Tensor] = None,
-        mu_y: Optional[torch.Tensor] = None,
-        mu_py: Optional[torch.Tensor] = None,
-        mu_tau: Optional[torch.Tensor] = None,
-        mu_p: Optional[torch.Tensor] = None,
-        sigma_x: Optional[torch.Tensor] = None,
-        sigma_px: Optional[torch.Tensor] = None,
-        sigma_y: Optional[torch.Tensor] = None,
-        sigma_py: Optional[torch.Tensor] = None,
-        sigma_tau: Optional[torch.Tensor] = None,
-        sigma_p: Optional[torch.Tensor] = None,
-        cov_xpx: Optional[torch.Tensor] = None,
-        cov_ypy: Optional[torch.Tensor] = None,
-        cov_taup: Optional[torch.Tensor] = None,
-        energy: Optional[torch.Tensor] = None,
-        total_charge: Optional[torch.Tensor] = None,
+        mu_x: Optional[jnp.Array] = None,
+        mu_px: Optional[jnp.Array] = None,
+        mu_y: Optional[jnp.Array] = None,
+        mu_py: Optional[jnp.Array] = None,
+        mu_tau: Optional[jnp.Array] = None,
+        mu_p: Optional[jnp.Array] = None,
+        sigma_x: Optional[jnp.Array] = None,
+        sigma_px: Optional[jnp.Array] = None,
+        sigma_y: Optional[jnp.Array] = None,
+        sigma_py: Optional[jnp.Array] = None,
+        sigma_tau: Optional[jnp.Array] = None,
+        sigma_p: Optional[jnp.Array] = None,
+        cov_xpx: Optional[jnp.Array] = None,
+        cov_ypy: Optional[jnp.Array] = None,
+        cov_taup: Optional[jnp.Array] = None,
+        energy: Optional[jnp.Array] = None,
+        total_charge: Optional[jnp.Array] = None,
         device=None,
         dtype=None,
     ) -> "Beam":
@@ -92,17 +92,17 @@ class Beam(ABC, nn.Module):
     @abstractmethod
     def from_twiss(
         cls,
-        beta_x: Optional[torch.Tensor] = None,
-        alpha_x: Optional[torch.Tensor] = None,
-        emittance_x: Optional[torch.Tensor] = None,
-        beta_y: Optional[torch.Tensor] = None,
-        alpha_y: Optional[torch.Tensor] = None,
-        emittance_y: Optional[torch.Tensor] = None,
-        sigma_tau: Optional[torch.Tensor] = None,
-        sigma_p: Optional[torch.Tensor] = None,
-        cov_taup: Optional[torch.Tensor] = None,
-        energy: Optional[torch.Tensor] = None,
-        total_charge: Optional[torch.Tensor] = None,
+        beta_x: Optional[jnp.Array] = None,
+        alpha_x: Optional[jnp.Array] = None,
+        emittance_x: Optional[jnp.Array] = None,
+        beta_y: Optional[jnp.Array] = None,
+        alpha_y: Optional[jnp.Array] = None,
+        emittance_y: Optional[jnp.Array] = None,
+        sigma_tau: Optional[jnp.Array] = None,
+        sigma_p: Optional[jnp.Array] = None,
+        cov_taup: Optional[jnp.Array] = None,
+        energy: Optional[jnp.Array] = None,
+        total_charge: Optional[jnp.Array] = None,
         device=None,
         dtype=None,
     ) -> "Beam":
@@ -132,32 +132,32 @@ class Beam(ABC, nn.Module):
     @abstractmethod
     def from_ocelot(cls, parray, device=None, dtype=None) -> "Beam":
         """
-        Convert an Ocelot ParticleArray `parray` to a Cheetah Beam.
+        Convert an Ocelot ParticleArray `parray` to a Lynx Beam.
         """
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
     def from_astra(cls, path: str, device=None, dtype=None) -> "Beam":
-        """Load an Astra particle distribution as a Cheetah Beam."""
+        """Load an Astra particle distribution as a Lynx Beam."""
         raise NotImplementedError
 
     def transformed_to(
         self,
-        mu_x: Optional[torch.Tensor] = None,
-        mu_px: Optional[torch.Tensor] = None,
-        mu_y: Optional[torch.Tensor] = None,
-        mu_py: Optional[torch.Tensor] = None,
-        mu_tau: Optional[torch.Tensor] = None,
-        mu_p: Optional[torch.Tensor] = None,
-        sigma_x: Optional[torch.Tensor] = None,
-        sigma_px: Optional[torch.Tensor] = None,
-        sigma_y: Optional[torch.Tensor] = None,
-        sigma_py: Optional[torch.Tensor] = None,
-        sigma_tau: Optional[torch.Tensor] = None,
-        sigma_p: Optional[torch.Tensor] = None,
-        energy: Optional[torch.Tensor] = None,
-        total_charge: Optional[torch.Tensor] = None,
+        mu_x: Optional[jnp.Array] = None,
+        mu_px: Optional[jnp.Array] = None,
+        mu_y: Optional[jnp.Array] = None,
+        mu_py: Optional[jnp.Array] = None,
+        mu_tau: Optional[jnp.Array] = None,
+        mu_p: Optional[jnp.Array] = None,
+        sigma_x: Optional[jnp.Array] = None,
+        sigma_px: Optional[jnp.Array] = None,
+        sigma_y: Optional[jnp.Array] = None,
+        sigma_py: Optional[jnp.Array] = None,
+        sigma_tau: Optional[jnp.Array] = None,
+        sigma_p: Optional[jnp.Array] = None,
+        energy: Optional[jnp.Array] = None,
+        total_charge: Optional[jnp.Array] = None,
         device=None,
         dtype=None,
     ) -> "Beam":
@@ -253,111 +253,111 @@ class Beam(ABC, nn.Module):
 
     @property
     @abstractmethod
-    def mu_x(self) -> torch.Tensor:
+    def mu_x(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def sigma_x(self) -> torch.Tensor:
+    def sigma_x(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def mu_px(self) -> torch.Tensor:
+    def mu_px(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def sigma_px(self) -> torch.Tensor:
+    def sigma_px(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def mu_y(self) -> torch.Tensor:
+    def mu_y(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def sigma_y(self) -> torch.Tensor:
+    def sigma_y(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def mu_py(self) -> torch.Tensor:
+    def mu_py(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def sigma_py(self) -> torch.Tensor:
+    def sigma_py(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def mu_tau(self) -> torch.Tensor:
+    def mu_tau(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def sigma_tau(self) -> torch.Tensor:
+    def sigma_tau(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def mu_p(self) -> torch.Tensor:
+    def mu_p(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def sigma_p(self) -> torch.Tensor:
+    def sigma_p(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
-    def relativistic_gamma(self) -> torch.Tensor:
+    def relativistic_gamma(self) -> jnp.Array:
         """Reference relativistic gamma of the beam."""
         return self.energy / electron_mass_eV
 
     @property
-    def relativistic_beta(self) -> torch.Tensor:
+    def relativistic_beta(self) -> jnp.Array:
         """Reference relativistic beta of the beam."""
-        relativistic_beta = torch.ones_like(self.relativistic_gamma)
-        relativistic_beta[torch.abs(self.relativistic_gamma) > 0] = torch.sqrt(
+        relativistic_beta = jnp.ones_like(self.relativistic_gamma)
+        relativistic_beta[jnp.abs(self.relativistic_gamma) > 0] = jnp.sqrt(
             1 - 1 / (self.relativistic_gamma[self.relativistic_gamma > 0] ** 2)
         )
         return relativistic_beta
 
     @property
-    def p0c(self) -> torch.Tensor:
+    def p0c(self) -> jnp.Array:
         """Get the reference momentum * speed of light in eV."""
         return self.relativistic_beta * self.relativistic_gamma * electron_mass_eV
 
     @property
     @abstractmethod
-    def cov_xpx(self) -> torch.Tensor:
+    def cov_xpx(self) -> jnp.Array:
         # The covariance of (x,px) ~ $\sigma_{xpx}$
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def cov_ypy(self) -> torch.Tensor:
+    def cov_ypy(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def cov_taup(self) -> torch.Tensor:
+    def cov_taup(self) -> jnp.Array:
         raise NotImplementedError
 
     @property
-    def emittance_x(self) -> torch.Tensor:
+    def emittance_x(self) -> jnp.Array:
         """Emittance of the beam in x direction in m."""
-        return torch.sqrt(
-            torch.clamp_min(
+        return jnp.sqrt(
+            jnp.clamp_min(
                 self.sigma_x**2 * self.sigma_px**2 - self.cov_xpx**2,
-                torch.finfo(self.sigma_x.dtype).tiny,
+                jnp.finfo(self.sigma_x.dtype).tiny,
             )
         )
 
     @property
-    def normalized_emittance_x(self) -> torch.Tensor:
+    def normalized_emittance_x(self) -> jnp.Array:
         """Normalized emittance of the beam in x direction in m."""
         return self.emittance_x * self.relativistic_beta * self.relativistic_gamma
 
@@ -367,22 +367,22 @@ class Beam(ABC, nn.Module):
         return self.sigma_x**2 / self.emittance_x
 
     @property
-    def alpha_x(self) -> torch.Tensor:
+    def alpha_x(self) -> jnp.Array:
         """Alpha function in x direction, dimensionless."""
         return -self.cov_xpx / self.emittance_x
 
     @property
-    def emittance_y(self) -> torch.Tensor:
+    def emittance_y(self) -> jnp.Array:
         """Emittance of the beam in y direction in m."""
-        return torch.sqrt(
-            torch.clamp_min(
+        return jnp.sqrt(
+            jnp.clamp_min(
                 self.sigma_y**2 * self.sigma_py**2 - self.cov_ypy**2,
-                torch.finfo(self.sigma_y.dtype).tiny,
+                jnp.finfo(self.sigma_y.dtype).tiny,
             )
         )
 
     @property
-    def normalized_emittance_y(self) -> torch.Tensor:
+    def normalized_emittance_y(self) -> jnp.Array:
         """Normalized emittance of the beam in y direction in m."""
         return self.emittance_y * self.relativistic_beta * self.relativistic_gamma
 
@@ -392,7 +392,7 @@ class Beam(ABC, nn.Module):
         return self.sigma_y**2 / self.emittance_y
 
     @property
-    def alpha_y(self) -> torch.Tensor:
+    def alpha_y(self) -> jnp.Array:
         """Alpha function in y direction, dimensionless."""
         return -self.cov_ypy / self.emittance_y
 

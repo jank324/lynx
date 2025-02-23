@@ -7,17 +7,16 @@ import jax
 import jax.numpy as jnp
 import matplotlib
 import matplotlib.pyplot as plt
-import torch
 from torch import nn
 
-from cheetah.accelerator.custom_transfer_map import CustomTransferMap
-from cheetah.accelerator.drift import Drift
-from cheetah.accelerator.element import Element
-from cheetah.accelerator.marker import Marker
-from cheetah.converters import bmad, elegant, nxtables
-from cheetah.latticejson import load_cheetah_model, save_cheetah_model
-from cheetah.particles import Beam
-from cheetah.utils import UniqueNameGenerator
+from lynx.accelerator.custom_transfer_map import CustomTransferMap
+from lynx.accelerator.drift import Drift
+from lynx.accelerator.element import Element
+from lynx.accelerator.marker import Marker
+from lynx.converters import bmad, elegant, nxtables
+from lynx.latticejson import load_lynx_model, save_lynx_model
+from lynx.particles import Beam
+from lynx.utils import UniqueNameGenerator
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
@@ -26,7 +25,7 @@ class Segment(Element):
     """
     Segment of a particle accelerator consisting of several elements.
 
-    :param cell: List of Cheetah elements that describe an accelerator (section).
+    :param cell: List of Lynx elements that describe an accelerator (section).
     :param name: Unique identifier of the element.
     """
 
@@ -41,7 +40,7 @@ class Segment(Element):
             if element.name in self.__dict__:
                 if isinstance(self.__dict__[element.name], list):
                     self.__dict__[element.name].append(element)
-                else:  # Is instance of cheetah.Element
+                else:  # Is instance of lynx.Element
                     self.__dict__[element.name] = [self.__dict__[element.name], element]
             else:
                 self.__dict__[element.name] = element
@@ -172,7 +171,7 @@ class Segment(Element):
             elements=[
                 element
                 for element in self.elements
-                if torch.any(element.length > 0.0)
+                if jnp.any(element.length > 0.0)
                 or (hasattr(element, "is_active") and element.is_active)
                 or element.name in except_for
             ],
@@ -201,7 +200,7 @@ class Segment(Element):
                 (
                     element
                     if (hasattr(element, "is_active") and element.is_active)
-                    or torch.all(element.length == 0.0)
+                    or jnp.all(element.length == 0.0)
                     or element.name in except_for
                     else Drift(
                         element.length,
@@ -218,12 +217,12 @@ class Segment(Element):
     @classmethod
     def from_lattice_json(cls, filepath: str) -> "Segment":
         """
-        Load a Cheetah model from a JSON file.
+        Load a Lynx model from a JSON file.
 
         :param filename: Name/path of the file to load the lattice from.
-        :return: Loaded Cheetah `Segment`.
+        :return: Loaded Lynx `Segment`.
         """
-        return load_cheetah_model(filepath)
+        return load_lynx_model(filepath)
 
     def to_lattice_json(
         self,
@@ -232,7 +231,7 @@ class Segment(Element):
         info: str = "This is a placeholder lattice description",
     ) -> None:
         """
-        Save a Cheetah model to a JSON file.
+        Save a Lynx model to a JSON file.
 
         :param filename: Name/path of the file to save the lattice to.
         :param title: Title of the lattice. If not provided, defaults to the name of the
@@ -241,7 +240,7 @@ class Segment(Element):
         :param info: Information about the lattice. Defaults to "This is a placeholder
             lattice description".
         """
-        save_cheetah_model(self, filepath, title, info)
+        save_lynx_model(self, filepath, title, info)
 
     @classmethod
     def from_ocelot(
@@ -254,9 +253,9 @@ class Segment(Element):
         **kwargs,
     ) -> "Segment":
         """
-        Translate an Ocelot cell to a Cheetah `Segment`.
+        Translate an Ocelot cell to a Lynx `Segment`.
 
-        NOTE Objects not supported by Cheetah are translated to drift sections. Screen
+        NOTE Objects not supported by Lynx are translated to drift sections. Screen
         objects are created only from `ocelot.Monitor` objects when the string "BSC" is
         contained in their `id` attribute. Their screen properties are always set to
         default values and most likely need adjusting afterwards. BPM objects are only
@@ -265,13 +264,13 @@ class Segment(Element):
         :param cell: Ocelot cell, i.e. a list of Ocelot elements to be converted.
         :param name: Unique identifier for the entire segment.
         :param warnings: Whether to print warnings when objects are not supported by
-            Cheetah or converted with potentially unexpected behavior.
-        :return: Cheetah segment closely resembling the Ocelot cell.
+            Lynx or converted with potentially unexpected behavior.
+        :return: Lynx segment closely resembling the Ocelot cell.
         """
-        from cheetah.converters import ocelot
+        from lynx.converters import ocelot
 
         converted = [
-            ocelot.convert_element_to_cheetah(
+            ocelot.convert_element_to_lynx(
                 element, warnings=warnings, device=device, dtype=dtype
             )
             for element in cell
@@ -283,11 +282,11 @@ class Segment(Element):
         cls,
         bmad_lattice_file_path: str,
         environment_variables: Optional[dict] = None,
-        device: Optional[Union[str, torch.device]] = None,
-        dtype: torch.dtype = torch.float32,
+        device: Optional[Union[str, jnp.device]] = None,
+        dtype: jnp.dtype = jnp.float32,
     ) -> "Segment":
         """
-        Read a Cheetah segment from a Bmad lattice file.
+        Read a Lynx segment from a Bmad lattice file.
 
         NOTE: This function was designed at the example of the LCLS lattice. While this
         lattice is extensive, this function might not properly convert all features of
@@ -299,10 +298,10 @@ class Segment(Element):
             parsing the lattice file.
         :param device: Device to place the lattice elements on.
         :param dtype: Data type to use for the lattice elements.
-        :return: Cheetah `Segment` representing the Bmad lattice.
+        :return: Lynx `Segment` representing the Bmad lattice.
         """
         bmad_lattice_file_path = Path(bmad_lattice_file_path)
-        return bmad.convert_lattice_to_cheetah(
+        return bmad.convert_lattice_to_lynx(
             bmad_lattice_file_path, environment_variables, device, dtype
         )
 
@@ -311,52 +310,52 @@ class Segment(Element):
         cls,
         elegant_lattice_file_path: str,
         name: str,
-        device: Optional[Union[str, torch.device]] = None,
-        dtype: torch.dtype = torch.float32,
+        device: Optional[Union[str, jnp.device]] = None,
+        dtype: jnp.dtype = jnp.float32,
     ) -> "Segment":
         """
-        Read a Cheetah segment from an elegant lattice file.
+        Read a Lynx segment from an elegant lattice file.
 
         :param bmad_lattice_file_path: Path to the Bmad lattice file.
         :param name: Name of the root element
         :param device: Device to place the lattice elements on.
         :param dtype: Data type to use for the lattice elements.
-        :return: Cheetah `Segment` representing the elegant lattice.
+        :return: Lynx `Segment` representing the elegant lattice.
         """
 
         elegant_lattice_file_path = Path(elegant_lattice_file_path)
-        return elegant.convert_lattice_to_cheetah(
+        return elegant.convert_lattice_to_lynx(
             elegant_lattice_file_path, name, device, dtype
         )
 
     @classmethod
     def from_nx_tables(cls, filepath: Union[Path, str]) -> "Element":
         """
-        Read an NX Tables CSV-like file generated for the ARES lattice into a Cheetah
+        Read an NX Tables CSV-like file generated for the ARES lattice into a Lynx
         `Segment`.
 
         NOTE: This format is specific to the ARES accelerator at DESY.
 
         :param filepath: Path to the NX Tables file.
-        :return: Converted Cheetah `Segment`.
+        :return: Converted Lynx `Segment`.
         """
         if isinstance(filepath, str):
             filepath = Path(filepath)
 
-        return nxtables.convert_lattice_to_cheetah(filepath)
+        return nxtables.convert_lattice_to_lynx(filepath)
 
     @property
     def is_skippable(self) -> bool:
         return all(element.is_skippable for element in self.elements)
 
     @property
-    def length(self) -> torch.Tensor:
+    def length(self) -> jnp.Array:
         lengths = [element.length for element in self.elements]
-        return reduce(torch.add, lengths)
+        return reduce(jnp.add, lengths)
 
     def transfer_map(self, energy: jax.Array) -> jax.Array:
         if self.is_skippable:
-            tm = torch.eye(7, device=energy.device, dtype=energy.dtype)
+            tm = jnp.eye(7, device=energy.device, dtype=energy.dtype)
             for element in self.elements:
                 tm = jnp.matmul(element.transfer_map(energy), tm)
             return tm
@@ -395,12 +394,12 @@ class Segment(Element):
 
     def plot(self, ax: plt.Axes, s: float, vector_idx: Optional[tuple] = None) -> None:
         element_lengths = [element.length for element in self.elements]
-        element_ss = [torch.tensor(0.0)] + [
+        element_ss = [jnp.asarray(0.0)] + [
             sum(element_lengths[: i + 1]) for i, _ in enumerate(element_lengths)
         ]
         element_ss = [s + element_s for element_s in element_ss]
-        broadcast_ss = torch.broadcast_tensors(*element_ss)
-        stacked_ss = torch.stack(broadcast_ss)
+        broadcast_ss = jnp.broadcast_tensors(*element_ss)
+        stacked_ss = jnp.stack(broadcast_ss)
         dimension_reordered_ss = stacked_ss.movedim(0, -1)  # Place vector dims first
 
         plot_ss = (
@@ -443,14 +442,14 @@ class Segment(Element):
             used by default.
         """
         reference_segment = self.clone()
-        splits = reference_segment.split(resolution=torch.tensor(resolution))
+        splits = reference_segment.split(resolution=jnp.asarray(resolution))
 
         split_lengths = [split.length for split in splits]
-        ss = [torch.tensor(0.0)] + [
+        ss = [jnp.asarray(0.0)] + [
             sum(split_lengths[: i + 1]) for i, _ in enumerate(split_lengths)
         ]
-        broadcast_ss = torch.broadcast_tensors(*ss)
-        stacked_ss = torch.stack(broadcast_ss)
+        broadcast_ss = jnp.broadcast_tensors(*ss)
+        stacked_ss = jnp.stack(broadcast_ss)
         dimensions_reordered_ss = stacked_ss.movedim(0, -1)  # Place vector dims first
 
         references = [incoming.linspaced(num_particles)]
@@ -459,13 +458,13 @@ class Segment(Element):
             references.append(sample)
 
         xs = [reference_beam.x for reference_beam in references]
-        broadcast_xs = torch.broadcast_tensors(*xs)
-        stacked_xs = torch.stack(broadcast_xs)
+        broadcast_xs = jnp.broadcast_tensors(*xs)
+        stacked_xs = jnp.stack(broadcast_xs)
         dimension_reordered_xs = stacked_xs.movedim(0, -1)  # Place vector dims first
 
         ys = [reference_beam.y for reference_beam in references]
-        broadcast_ys = torch.broadcast_tensors(*ys)
-        stacked_ys = torch.stack(broadcast_ys)
+        broadcast_ys = jnp.broadcast_tensors(*ys)
+        stacked_ys = jnp.stack(broadcast_ys)
         dimension_reordered_ys = stacked_ys.movedim(0, -1)  # Place vector dims first
 
         plot_ss = (
@@ -544,9 +543,9 @@ class Segment(Element):
     ) -> None:
         """Plot twiss parameters along the segment."""
         longitudinal_beams = [incoming]
-        s_positions = [torch.tensor(0.0)]
+        s_positions = [jnp.asarray(0.0)]
         for element in self.elements:
-            if torch.all(element.length == 0):
+            if jnp.all(element.length == 0):
                 continue
 
             outgoing = element.track(longitudinal_beams[-1])
@@ -558,8 +557,8 @@ class Segment(Element):
         beta_y = [beam.beta_y for beam in longitudinal_beams]
 
         # Extraction of the correct vector element for plotting
-        broadcast_s_positions = torch.broadcast_tensors(*s_positions)
-        stacked_s_positions = torch.stack(broadcast_s_positions)
+        broadcast_s_positions = jnp.broadcast_tensors(*s_positions)
+        stacked_s_positions = jnp.stack(broadcast_s_positions)
         dimension_reordered_s_positions = stacked_s_positions.movedim(0, -1)
         plot_s_positions = (
             dimension_reordered_s_positions[vector_idx]
@@ -567,8 +566,8 @@ class Segment(Element):
             else dimension_reordered_s_positions
         ).detach()
 
-        broadcast_beta_x = torch.broadcast_tensors(*beta_x)
-        stacked_beta_x = torch.stack(broadcast_beta_x)
+        broadcast_beta_x = jnp.broadcast_tensors(*beta_x)
+        stacked_beta_x = jnp.stack(broadcast_beta_x)
         dimension_reordered_beta_x = stacked_beta_x.movedim(0, -1)
         plot_beta_x = (
             dimension_reordered_beta_x[vector_idx]
@@ -576,8 +575,8 @@ class Segment(Element):
             else dimension_reordered_beta_x
         ).detach()
 
-        broadcast_beta_y = torch.broadcast_tensors(*beta_y)
-        stacked_beta_y = torch.stack(broadcast_beta_y)
+        broadcast_beta_y = jnp.broadcast_tensors(*beta_y)
+        stacked_beta_y = jnp.stack(broadcast_beta_y)
         dimension_reordered_beta_y = stacked_beta_y.movedim(0, -1)
         plot_beta_y = (
             dimension_reordered_beta_y[vector_idx]

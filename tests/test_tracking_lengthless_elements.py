@@ -18,13 +18,9 @@ def test_tracking_marker_only():
 def test_tracking_lengthless_elements():
     segment = lynx.Segment(
         [
-            cheetah.Cavity(
-                length=torch.tensor(0.1), voltage=torch.tensor(1e6), name="C2"
-            ),
-            cheetah.Marker(name="start"),
-            cheetah.Cavity(
-                length=torch.tensor(0.1), voltage=torch.tensor(1e6), name="C1"
-            ),
+            lynx.Cavity(length=jnp.asarray(0.1), voltage=jnp.asarray(1e6), name="C2"),
+            lynx.Marker(name="start"),
+            lynx.Cavity(length=jnp.asarray(0.1), voltage=jnp.asarray(1e6), name="C1"),
         ]
     )
 

@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from scipy.constants import physical_constants
 
-from cheetah.accelerator.element import Element
-from cheetah.utils import UniqueNameGenerator
+from lynx.accelerator.element import Element
+from lynx.utils import UniqueNameGenerator
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
@@ -28,7 +28,7 @@ class Undulator(Element):
 
     def __init__(
         self,
-        length: torch.Tensor,
+        length: jnp.Array,
         is_active: bool = False,
         name: Optional[str] = None,
         device=None,
@@ -45,11 +45,11 @@ class Undulator(Element):
         dtype = self.length.dtype
 
         gamma = energy / electron_mass_eV
-        igamma2 = torch.where(gamma != 0, 1 / gamma**2, torch.zeros_like(gamma))
+        igamma2 = jnp.where(gamma != 0, 1 / gamma**2, jnp.zeros_like(gamma))
 
-        vector_shape = torch.broadcast_shapes(self.length.shape, igamma2.shape)
+        vector_shape = jnp.broadcast_shapes(self.length.shape, igamma2.shape)
 
-        tm = torch.eye(7, device=device, dtype=dtype).repeat((*vector_shape, 1, 1))
+        tm = jnp.eye(7, device=device, dtype=dtype).repeat((*vector_shape, 1, 1))
         tm[..., 0, 1] = self.length
         tm[..., 2, 3] = self.length
         tm[..., 4, 5] = self.length * igamma2

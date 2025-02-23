@@ -3,12 +3,12 @@ from typing import Literal, Optional
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
+from jnp.distributions import MultivariateNormal
 from matplotlib.patches import Rectangle
-from torch.distributions import MultivariateNormal
 
-from cheetah.accelerator.element import Element
-from cheetah.particles import Beam, ParameterBeam, ParticleBeam
-from cheetah.utils import UniqueNameGenerator, kde_histogram_2d, verify_device_and_dtype
+from lynx.accelerator.element import Element
+from lynx.particles import Beam, ParameterBeam, ParticleBeam
+from lynx.utils import UniqueNameGenerator, kde_histogram_2d, verify_device_and_dtype
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
@@ -43,11 +43,11 @@ class Screen(Element):
     def __init__(
         self,
         resolution: tuple[int, int] = (1024, 1024),
-        pixel_size: Optional[torch.Tensor] = None,
+        pixel_size: Optional[jnp.Array] = None,
         binning: int = 1,
-        misalignment: Optional[torch.Tensor] = None,
+        misalignment: Optional[jnp.Array] = None,
         method: Literal["histogram", "kde"] = "histogram",
-        kde_bandwidth: Optional[torch.Tensor] = None,
+        kde_bandwidth: Optional[jnp.Array] = None,
         is_blocking: bool = False,
         is_active: bool = False,
         name: Optional[str] = None,
@@ -71,24 +71,24 @@ class Screen(Element):
         self.is_blocking = is_blocking
         self.is_active = is_active
 
-        self.register_buffer("pixel_size", torch.tensor((1e-3, 1e-3), **factory_kwargs))
-        self.register_buffer("misalignment", torch.tensor((0.0, 0.0), **factory_kwargs))
-        self.register_buffer("kde_bandwidth", torch.clone(self.pixel_size[0]))
+        self.register_buffer("pixel_size", jnp.asarray((1e-3, 1e-3), **factory_kwargs))
+        self.register_buffer("misalignment", jnp.asarray((0.0, 0.0), **factory_kwargs))
+        self.register_buffer("kde_bandwidth", jnp.clone(self.pixel_size[0]))
 
         # NOTE: According to its type hint, the operation on resolution below is a
         # no-op. However, this form is robust against accidentally passing a
-        # torch.Tensor, preventing crashes in some instances.
+        # jnp.Array, preventing crashes in some instances.
         self.register_buffer(
             "cached_reading",
-            torch.full((resolution[0], resolution[1]), torch.nan, **factory_kwargs),
+            jnp.full((resolution[0], resolution[1]), jnp.nan, **factory_kwargs),
         )
 
         if pixel_size is not None:
-            self.pixel_size = torch.as_tensor(pixel_size, **factory_kwargs)
+            self.pixel_size = jnp.as_tensor(pixel_size, **factory_kwargs)
         if misalignment is not None:
-            self.misalignment = torch.as_tensor(misalignment, **factory_kwargs)
+            self.misalignment = jnp.as_tensor(misalignment, **factory_kwargs)
         if kde_bandwidth is not None:
-            self.kde_bandwidth = torch.as_tensor(kde_bandwidth, **factory_kwargs)
+            self.kde_bandwidth = jnp.as_tensor(kde_bandwidth, **factory_kwargs)
 
         self.set_read_beam(None)
 
@@ -134,13 +134,13 @@ class Screen(Element):
         )
 
     @property
-    def pixel_bin_centers(self) -> tuple[torch.Tensor, torch.Tensor]:
+    def pixel_bin_centers(self) -> tuple[jnp.Array, jnp.Array]:
         return (
             (self.pixel_bin_edges[0][1:] + self.pixel_bin_edges[0][:-1]) / 2,
             (self.pixel_bin_edges[1][1:] + self.pixel_bin_edges[1][:-1]) / 2,
         )
 
-    def transfer_map(self, energy: torch.Tensor) -> torch.Tensor:
+    def transfer_map(self, energy: jnp.Array) -> jnp.Array:
         device = self.misalignment.device
         dtype = self.misalignment.dtype
 
@@ -152,7 +152,7 @@ class Screen(Element):
             copy_of_incoming = incoming.clone()
 
             if isinstance(incoming, ParameterBeam):
-                copy_of_incoming._mu, _ = torch.broadcast_tensors(
+                copy_of_incoming._mu, _ = jnp.broadcast_tensors(
                     copy_of_incoming._mu, self.misalignment[..., 0]
                 )
                 copy_of_incoming._mu = copy_of_incoming._mu.clone()
@@ -160,7 +160,7 @@ class Screen(Element):
                 copy_of_incoming._mu[..., 0] -= self.misalignment[..., 0]
                 copy_of_incoming._mu[..., 2] -= self.misalignment[..., 1]
             elif isinstance(incoming, ParticleBeam):
-                copy_of_incoming.particles, _ = torch.broadcast_tensors(
+                copy_of_incoming.particles, _ = jnp.broadcast_tensors(
                     copy_of_incoming.particles,
                     self.misalignment[..., 0].unsqueeze(-1).unsqueeze(-1),
                 )
@@ -182,14 +182,14 @@ class Screen(Element):
                     mu=incoming._mu,
                     cov=incoming._cov,
                     energy=incoming.energy,
-                    total_charge=torch.zeros_like(incoming.total_charge),
+                    total_charge=jnp.zeros_like(incoming.total_charge),
                 )
             elif isinstance(incoming, ParticleBeam):
                 return ParticleBeam(
                     particles=incoming.particles,
                     energy=incoming.energy,
                     particle_charges=incoming.particle_charges,
-                    survival_probabilities=torch.zeros_like(
+                    survival_probabilities=jnp.zeros_like(
                         incoming.survival_probabilities
                     ),
                 )
@@ -197,26 +197,26 @@ class Screen(Element):
             return incoming.clone()
 
     @property
-    def reading(self) -> torch.Tensor:
-        if not torch.all(torch.isnan(self.cached_reading)):
+    def reading(self) -> jnp.Array:
+        if not jnp.all(jnp.isnan(self.cached_reading)):
             return self.cached_reading
 
         read_beam = self.get_read_beam()
         if read_beam is None:
-            image = torch.zeros(
+            image = jnp.zeros(
                 (int(self.effective_resolution[1]), int(self.effective_resolution[0])),
                 device=self.misalignment.device,
                 dtype=self.misalignment.dtype,
             )
         elif isinstance(read_beam, ParameterBeam):
-            if torch.numel(read_beam._mu[..., 0]) > 1:
+            if jnp.numel(read_beam._mu[..., 0]) > 1:
                 raise NotImplementedError(
                     "`Screen` does not support vectorization of `ParameterBeam`. "
                     "Please use `ParticleBeam` instead. If this is a feature you would "
                     "like to see, please open an issue on GitHub."
                 )
 
-            transverse_mu = torch.stack(
+            transverse_mu = jnp.stack(
                 [read_beam._mu[..., 0], read_beam._mu[..., 2]], dim=-1
             )
             transverse_cov = jnp.stack(
@@ -245,9 +245,9 @@ class Screen(Element):
                 jnp.arange(bottom, top, vstep),
                 indexing="ij",
             )
-            pos = torch.dstack((x, y))
+            pos = jnp.dstack((x, y))
             image = dist.log_prob(pos).exp()
-            image = torch.flip(image, dims=[1])
+            image = jnp.flip(image, dims=[1])
         elif isinstance(read_beam, ParticleBeam):
             if self.method == "histogram":
                 # Catch vectorisation, which is currently not supported by "histogram"
@@ -262,17 +262,17 @@ class Screen(Element):
                         "would like to see, please open an issue on GitHub."
                     )
 
-                image, _ = torch.histogramdd(
-                    torch.stack((read_beam.x, read_beam.y)).T,
+                image, _ = jnp.histogramdd(
+                    jnp.stack((read_beam.x, read_beam.y)).T,
                     bins=self.pixel_bin_edges,
                     weight=read_beam.particle_charges
                     * read_beam.survival_probabilities,
                 )
-                image = torch.flipud(image.T)
+                image = jnp.flipud(image.T)
             elif self.method == "kde":
                 weights = read_beam.particle_charges * read_beam.survival_probabilities
                 broadcasted_x, broadcasted_y, broadcasted_weights = (
-                    torch.broadcast_tensors(read_beam.x, read_beam.y, weights)
+                    jnp.broadcast_tensors(read_beam.x, read_beam.y, weights)
                 )
                 image = kde_histogram_2d(
                     x1=broadcasted_x,
@@ -283,9 +283,9 @@ class Screen(Element):
                     weights=broadcasted_weights,
                 )
                 # Change the x, y positions
-                image = torch.transpose(image, -2, -1)
+                image = jnp.transpose(image, -2, -1)
                 # Flip up and down, now row 0 corresponds to the top
-                image = torch.flip(image, dims=[-2])
+                image = jnp.flip(image, dims=[-2])
         else:
             raise TypeError(f"Read beam is of invalid type {type(read_beam)}")
 
@@ -303,9 +303,9 @@ class Screen(Element):
         # prevent `nn.Module` from intercepting the read beam, which is itself an
         # `nn.Module`, and registering it as a submodule of the screen.
         self._read_beam = value
-        self.cached_reading = torch.full(
+        self.cached_reading = jnp.full(
             (self.resolution[0], self.resolution[1]),
-            torch.nan,
+            jnp.nan,
             device=self.cached_reading.device,
             dtype=self.cached_reading.dtype,
         )

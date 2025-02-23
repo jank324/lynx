@@ -1,9 +1,9 @@
 from typing import Literal, Optional
 
-import torch
+import jax.numpy as jnp
 
-from cheetah.accelerator.dipole import Dipole
-from cheetah.utils import UniqueNameGenerator, verify_device_and_dtype
+from lynx.accelerator.dipole import Dipole
+from lynx.utils import UniqueNameGenerator, verify_device_and_dtype
 
 generate_unique_name = UniqueNameGenerator(prefix="unnamed_element")
 
@@ -37,19 +37,19 @@ class RBend(Dipole):
 
     def __init__(
         self,
-        length: Optional[torch.Tensor],
-        angle: Optional[torch.Tensor] = None,
-        k1: Optional[torch.Tensor] = None,
-        rbend_e1: Optional[torch.Tensor] = None,
-        rbend_e2: Optional[torch.Tensor] = None,
-        tilt: Optional[torch.Tensor] = None,
-        gap: Optional[torch.Tensor] = None,
-        gap_exit: Optional[torch.Tensor] = None,
-        fringe_integral: Optional[torch.Tensor] = None,
-        fringe_integral_exit: Optional[torch.Tensor] = None,
+        length: Optional[jnp.Array],
+        angle: Optional[jnp.Array] = None,
+        k1: Optional[jnp.Array] = None,
+        rbend_e1: Optional[jnp.Array] = None,
+        rbend_e2: Optional[jnp.Array] = None,
+        tilt: Optional[jnp.Array] = None,
+        gap: Optional[jnp.Array] = None,
+        gap_exit: Optional[jnp.Array] = None,
+        fringe_integral: Optional[jnp.Array] = None,
+        fringe_integral_exit: Optional[jnp.Array] = None,
         fringe_at: Literal["neither", "entrance", "exit", "both"] = "both",
         fringe_type: Literal["linear_edge"] = "linear_edge",
-        tracking_method: Literal["cheetah", "bmadx"] = "cheetah",
+        tracking_method: Literal["lynx", "bmadx"] = "lynx",
         name: Optional[str] = None,
         device=None,
         dtype=None,
@@ -74,19 +74,19 @@ class RBend(Dipole):
         factory_kwargs = {"device": device, "dtype": dtype}
 
         angle = (
-            torch.as_tensor(angle, **factory_kwargs)
+            jnp.as_tensor(angle, **factory_kwargs)
             if angle is not None
-            else torch.tensor(0.0, **factory_kwargs)
+            else jnp.asarray(0.0, **factory_kwargs)
         )
         rbend_e1 = (
-            torch.as_tensor(rbend_e1, **factory_kwargs)
+            jnp.as_tensor(rbend_e1, **factory_kwargs)
             if rbend_e1 is not None
-            else torch.tensor(0.0, **factory_kwargs)
+            else jnp.asarray(0.0, **factory_kwargs)
         )
         rbend_e2 = (
-            torch.as_tensor(rbend_e2, **factory_kwargs)
+            jnp.as_tensor(rbend_e2, **factory_kwargs)
             if rbend_e2 is not None
-            else torch.tensor(0.0, **factory_kwargs)
+            else jnp.asarray(0.0, **factory_kwargs)
         )
 
         super().__init__(

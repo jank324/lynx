@@ -1,9 +1,7 @@
-import torch
+import jax.numpy as jnp
 
 
-def elementwise_linspace(
-    start: torch.Tensor, end: torch.Tensor, steps: int
-) -> torch.Tensor:
+def elementwise_linspace(start: jnp.Array, end: jnp.Array, steps: int) -> jnp.Array:
     """
     Generate a tensor of linearly spaced values between two tensors element-wise.
 
@@ -22,10 +20,10 @@ def elementwise_linspace(
 
     # Generate linspace for each pair of elements in a and b
     for i in range(a_flat.shape[0]):
-        result.append(torch.linspace(a_flat[i], b_flat[i], steps))
+        result.append(jnp.linspace(a_flat[i], b_flat[i], steps))
 
     # Stack the results along a new dimension (each linspace will become a row)
-    result = torch.stack(result)
+    result = jnp.stack(result)
 
     # Reshape back to the original tensor dimensions with one extra dimension for the
     # steps
